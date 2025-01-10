@@ -1,0 +1,52 @@
+import React, { Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { CartProvider } from './contexts/CartContext';
+
+// Components
+import FirstPage from './Components/pages/FirstPage'; // FirstPage now includes Chatbot
+import HpPage from './Components/pages/HpPage';
+import DellPage from './Components/pages/DellPage';
+import Purchase from './Components/pages/Purchase';
+import CartPage from './Components/pages/Cart';
+import UserManagement from './Components/pages/UserManagement'; // Import User Management Page
+
+function App() {
+  const user = {
+    name: 'John Doe',
+    email: 'john.doe@example.com',
+    wallet: 120.5,
+  };
+
+  const handleLogout = () => {
+    console.log('User logged out');
+    // Add logout logic, e.g., clear session or redirect to login
+  };
+
+  return (
+    <CartProvider>
+      <Router>
+        {/* Main Split-Screen Layout */}
+        <div className="split-screen">
+          {/* Main Content */}
+          <div className="right-screen">
+            <Suspense fallback={<div>Loading Content...</div>}>
+              <Routes>
+                <Route path="/" element={<FirstPage />} />
+                <Route path="/hppage" element={<HpPage />} />
+                <Route path="/dellpage" element={<DellPage />} />
+                <Route path="/purchase" element={<Purchase />} />
+                <Route path="/cart" element={<CartPage />} />
+                <Route
+                  path="/user-management"
+                  element={<UserManagement user={user} onLogout={handleLogout} />}
+                />
+              </Routes>
+            </Suspense>
+          </div>
+        </div>
+      </Router>
+    </CartProvider>
+  );
+}
+
+export default App;

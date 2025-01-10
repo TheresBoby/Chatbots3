@@ -1,0 +1,369 @@
+/* General Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', Arial, sans-serif;
+}
+
+/* Split-Screen Container */
+.split-screen {
+  display: flex;
+  height: 100vh; /* Full viewport height */
+  background-color: #000; /* Dark Base */
+}
+
+/* Left Screen: Chatbot Section */
+.left-screen {
+  flex: 1;
+  background: radial-gradient(circle, #121212, #000000); /* Galaxy Gradient */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 2px solid rgba(255, 255, 255, 0.2);
+  padding: 20px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.left-screen::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/images/chatbot.jpg');
+  background-repeat: repeat;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.4;
+  z-index: 0;
+}
+
+/* Chatbot Container with Transparency */
+.chatbot-container {
+  background: rgba(20, 20, 20, 0.7); /* Transparent black glass */
+  backdrop-filter: blur(15px); /* Glass-like blur effect */
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  color: #ddd;
+  z-index: 1;
+  text-align: center;
+}
+
+.chatbot-container h3 {
+  font-size: 1.5rem;
+  color: #f4f4f4;
+}
+
+.chatbot-container p {
+  font-size: 1rem;
+  margin-top: 10px;
+  opacity: 0.8;
+}
+
+/* Welcome Message Styling */
+.welcome-message {
+  position: absolute;
+  top: 15%;
+  text-align: center;
+  color: #fff;
+  font-size: 2rem;
+  font-weight: bold;
+  animation: fadeIn 2s ease-in-out;
+  z-index: 1;
+}
+
+.welcome-message span {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: normal;
+  margin-top: 10px;
+  opacity: 0.8;
+}
+
+/* Fade-in Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Right Screen: Content Section */
+.right-screen {
+  flex: 1.5;
+  background: linear-gradient(to bottom, #000000, #121212);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  color: #f4f4f4;
+  overflow-y: auto;
+}
+
+.right-screen .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 10px;
+}
+
+.right-screen .header h1 {
+  font-size: 1.8rem;
+  color: #fff;
+}
+
+.search-bar input {
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  outline: none;
+  background: #222;
+  color: #fff;
+}
+
+.search-bar .search-button {
+  padding: 8px 12px;
+  background-color: #444;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.search-bar .search-button:hover {
+  background-color: #555;
+}
+
+/* Laptop Carousel Section */
+.laptop-carousel-section {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.laptop-item {
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  width: 180px; /* Adjust width as needed */
+  height: auto; /* Allow flexible height */
+}
+
+.laptop-item img {
+  width: 100%;  /* Ensure the image fills the container width */
+  height: auto; /* Keep the aspect ratio intact */
+  object-fit: contain; /* Ensures the entire image is visible without clipping */
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.laptop-item p {
+  margin-top: 8px;
+  font-size: 1rem;
+  color: #ddd;
+}
+
+.laptop-item:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .split-screen {
+    flex-direction: column;
+  }
+
+  .left-screen,
+  .right-screen {
+    flex: none;
+    height: 50vh;
+  }
+
+  /* Adjust Chatbot Container */
+.chatbot-container {
+  background: none; /* Remove background */
+  border: none; /* Remove border */
+  box-shadow: none; /* Remove shadow */
+  padding: 0; /* Remove padding */
+  width: 100%; /* Full width */
+  max-width: none; /* Remove max width */
+  color: #ddd;
+  text-align: center;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 20px;
+}
+
+/* Add styling for input, options, and button */
+.chatbot-container input[type="text"], 
+.chatbot-container select, 
+.chatbot-container button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  background-color: #222;
+  color: #fff;
+}
+
+.chatbot-container button {
+  cursor: pointer;
+  background-color: #444;
+}
+
+.chatbot-container button:hover {
+  background-color: #555;
+}
+
+/* Ensure the left screen content scrolls if necessary */
+.left-screen {
+  overflow-y: auto;
+  padding-bottom: 100px; /* Space for input and button */
+}
+
+@media (max-width: 768px) {
+  .chatbot-container input[type="text"], 
+  .chatbot-container select, 
+  .chatbot-container button {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+}
+
+
+  .laptop-item img {
+    width: 100%;  /* Ensure image is responsive */
+    height: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-message {
+    font-size: 1.5rem;
+  }
+
+  .laptop-item img {
+    width: 100%;  /* Ensure image is responsive */
+    height: auto;
+  }
+
+  .search-bar input {
+    width: 70%;
+  }
+}
+
+
+
+
+/* Full Page Layout for User Management */
+.user-management-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  height: 100vh; /* Full viewport height */
+  background-color: #f9f9f9;
+  font-family: 'Poppins', sans-serif;
+}
+
+.user-details-section {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.user-header h2 {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.user-header p {
+  color: #777;
+  font-size: 1rem;
+}
+
+.wallet-section {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.user-wallet {
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.orders-section {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.orders-button {
+  padding: 12px 25px;
+  font-size: 1.2rem;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.orders-button:hover {
+  background-color: #45a049;
+}
+
+.logout-section {
+  width: 100%;
+  text-align: center;
+}
+
+.logout-button {
+  padding: 12px 25px;
+  font-size: 1.2rem;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background-color: #e53935;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .user-management-page {
+    padding: 10px;
+  }
+
+  .user-header h2 {
+    font-size: 1.8rem;
+  }
+
+  .user-wallet {
+    font-size: 1.3rem;
+  }
+
+  .orders-button, .logout-button {
+    padding: 10px 20px;
+    font-size: 1rem;
+  }
+}
