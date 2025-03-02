@@ -1,63 +1,49 @@
-import React, { useState } from 'react';
-import UserManagement from './UserManagement';
+import React from 'react';
+import './LaptopSection.css';
 
-const LaptopSection = ({ handleHpClick, handleDellClick }) => {
-  const [showUserManagement, setShowUserManagement] = useState(false);
-  const [user, setUser] = useState({
-    name: "Theres Boby",
-    email: "theresboby@gmail.com"
-    
-  });
+const LaptopSection = ({ onLaptopClick }) => {
   const laptops = [
-    { name: 'HP', imgSrc: '/images/hpimage.jpg', onClick: 'handleHpClick' },
-  { name: 'DELL', imgSrc: '/images/dellimage.avif', onClick: 'handleDellClick' },
-  { name: 'ASUS', imgSrc: '/images/asus.jpg' },
-  { name: 'SAMSUNG', imgSrc: '/images/samsung.jpg' },
-  { name: 'APPLE', imgSrc: '/images/apple.webp' },
+    { name: 'HP', imgSrc: '/images/hpimage.jpg', description: 'High-performance laptops for work and play' },
+    { name: 'DELL', imgSrc: '/images/dellimage.avif', description: 'Reliable business and gaming machines' },
+    { name: 'ASUS', imgSrc: '/images/asus.jpg', description: 'Innovative design with cutting-edge technology' },
+    { name: 'SAMSUNG', imgSrc: '/images/samsung.jpg', description: 'Sleek, powerful laptops with vibrant displays' },
+    { name: 'APPLE', imgSrc: '/images/apple.webp', description: 'Premium build quality with seamless ecosystem' },
   ];
-  
-  const handleLogout = () => {
-    // Add your logout logic here
-    setShowUserManagement(false);
-    // Clear user session/localStorage etc.
+
+  const handleClick = (e, laptopName) => {
+    e.stopPropagation(); // Prevent event bubbling
+    if (onLaptopClick) {
+      onLaptopClick(laptopName);
+    }
   };
 
-  const clickHandlers = { handleHpClick, handleDellClick };
-
-  if (showUserManagement) {
-    return <UserManagement user={user} onLogout={handleLogout} />;
-  }
-
   return (
-    <div className="right-screen">
-      <header className="header">
-        <div className="search-bar">
-          <input type="text" placeholder="What are you looking for?" />
-          <button className="search-button">🔍</button>
-        </div>
-        <div className="user-cart-icons">
-          <button 
-            className="user-icon"
-            onClick={() => setShowUserManagement(true)}
-          >
-            👤
-          </button>
-          <button className="cart-icon">🛒</button>
-        </div>
-      </header>
-
-      <section className="laptop-carousel-section">
+    <div className="laptop-section-wrapper">
+      <h2 className="section-title">Available Laptop Brands</h2>
+      <p className="section-description">Browse our selection of premium laptops from top manufacturers</p>
+      
+      <div className="laptop-grid">
         {laptops.map((laptop) => (
-          <div
+          <div 
             key={laptop.name}
-            className="laptop-item"
-            onClick={laptop.onClick ? clickHandlers[laptop.onClick] : null}
+            className="laptop-card"
+            onClick={(e) => handleClick(e, laptop.name)}
           >
-            <img src={laptop.imgSrc} alt={laptop.name} />
-            <p>{laptop.name}</p>
+            <div className="laptop-image-container">
+              <img 
+                src={laptop.imgSrc} 
+                alt={laptop.name}
+                className="laptop-image"
+              />
+            </div>
+            <div className="laptop-info">
+              <h3 className="laptop-name">{laptop.name}</h3>
+              <p className="laptop-description">{laptop.description}</p>
+              <button className="view-button" onClick={(e) => handleClick(e, laptop.name)}>View Models</button>
+            </div>
           </div>
         ))}
-      </section>
+      </div>
     </div>
   );
 };

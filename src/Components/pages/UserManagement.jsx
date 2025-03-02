@@ -12,14 +12,6 @@ const UserManagement = ({ user = {}, onLogout = () => {} }) => {
     lastOrderDate = 'No orders yet'
   } = user;
 
-  const handleViewOrders = () => {
-    console.log('Viewing Orders');
-  };
-
-  const handleSettings = () => {
-    console.log('Opening Settings');
-  };
-
   return (
     <div className="min-h-screen bg-black p-6">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -39,7 +31,6 @@ const UserManagement = ({ user = {}, onLogout = () => {} }) => {
               <p className="text-sm text-zinc-500">Member since {joinDate}</p>
             </div>
             <button
-              onClick={handleSettings}
               className="px-4 py-2 border border-zinc-700 hover:bg-zinc-800 text-zinc-300 rounded-md flex items-center gap-2"
             >
               <Settings className="h-4 w-4" />
@@ -91,7 +82,6 @@ const UserManagement = ({ user = {}, onLogout = () => {} }) => {
             <p className="text-zinc-500">Manage your account and orders</p>
             <div className="mt-4 space-y-4">
               <button
-                onClick={handleViewOrders}
                 className="w-full px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-md flex items-center gap-2"
               >
                 <Package className="h-4 w-4" />
@@ -111,7 +101,7 @@ const UserManagement = ({ user = {}, onLogout = () => {} }) => {
             <p className="text-zinc-500">Manage your account security settings</p>
             <div className="mt-4">
               <button
-                onClick={onLogout}
+                onClick={onLogout} 
                 className="w-full px-4 py-2 bg-red-900/80 hover:bg-red-900 text-red-100 rounded-md flex items-center gap-2"
               >
                 <LogOut className="h-4 w-4" />

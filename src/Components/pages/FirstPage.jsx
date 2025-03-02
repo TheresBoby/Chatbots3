@@ -1,168 +1,84 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Loader } from 'lucide-react';
+import { Search, ShoppingCart, User } from 'lucide-react';
+import ChatbotSection from './ChatbotSection';
 import LaptopSection from './LaptopSection';
-import '../../App.css';
+import LaptopPage from './LaptopPage';
+import UserManagement from './UserManagement';
+import './chatbot.css';
 
 const FirstPage = () => {
   const navigate = useNavigate();
-  const [showWelcome, setShowWelcome] = useState(true);
-  const [message, setMessage] = useState('');
-  const [chatHistory, setChatHistory] = useState([]);
-  const [context, setContext] = useState('product_inquiry');
-  const [isLoading, setIsLoading] = useState(false);
-  const chatEndRef = useRef(null);
-  const inputRef = useRef(null);
+  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [showUserManagement, setShowUserManagement] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowWelcome(false);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatHistory]);
-
-  const handleHpClick = () => {
-    navigate('/HpPage');
+  const handleLaptopClick = (brand) => {
+    setSelectedBrand(brand);
+    setShowUserManagement(false);
   };
 
-  const handleDellClick = () => {
-    navigate('/DellPage');
+  const handleLogout = () => {
+    setShowUserManagement(false);
   };
 
-  const sendMessageToBackend = async (userMessage, context) => {
-    try {
-      setIsLoading(true);
-      const response = await fetch('http://127.0.0.1:8000', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: userMessage,
-          context: context,
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      
-      const data = await response.json();
-      return data.response;
-    } catch (error) {
-      console.error('Chatbot error:', error);
-      return 'Sorry, I couldn\'t process your message right now. Please try again later.';
-    } finally {
-      setIsLoading(false);
-    }
+  const handleUserClick = () => {
+    setShowUserManagement(true);
+    setSelectedBrand(null);
   };
 
-  const handleSendMessage = async (e) => {
-    e?.preventDefault();
-    
-    if (message.trim() && !isLoading) {
-      const userMessage = { sender: 'user', text: message.trim() };
-      setChatHistory((prev) => [...prev, userMessage]);
-      setMessage('');
+  const handleCart = () => {
+    // Instead of navigating, we'll handle this in our component
+    setShowUserManagement(false);
+    setSelectedBrand(null);
+    // You could set a state variable like showCart to true here
+  };
 
-      const botReply = await sendMessageToBackend(message, context);
-      const botMessage = { sender: 'bot', text: botReply };
-      setChatHistory((prev) => [...prev, botMessage]);
-      
-      inputRef.current?.focus();
+  const handleBrandSelect = (brand) => {
+    setSelectedBrand(brand);
+    setShowUserManagement(false);
+  };
+
+  // Determine which component to show on the right side
+  const renderRightComponent = () => {
+    if (showUserManagement) {
+      return <UserManagement onLogout={handleLogout} />;
+    } else if (selectedBrand) {
+      return <LaptopPage brand={selectedBrand} />;
+    } else {
+      return <LaptopSection onLaptopClick={handleLaptopClick} />;
     }
   };
 
   return (
-    <div className="split-screen">
-      {/* Left Screen: Chatbot Section */}
-      <div className="left-screen">
-        {showWelcome && (
-          <div className="welcome-message">
-            <h2>Heyy! 👋</h2>
-            <p>I'm your AI assistant here to help you with shopping.</p>
+    <div className="app-container">
+      {/* Header */}
+      <header className="app-header">
+        <div className="header-content">
+          <h1 className="header-title">Smart Support</h1>
+          <div className="search-container">
+            <input type="text" placeholder="What are you looking for?" className="search-input" />
+            <Search className="search-icon" size={16} />
           </div>
-        )}
-        
-        {/* Chat Messages */}
-        <div className="flex flex-col h-full">
-          <div className="flex-grow overflow-y-auto p-4 space-y-4 mb-4">
-            {chatHistory.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[70%] p-3 rounded-lg ${
-                    msg.sender === 'user'
-                      ? 'bg-blue-600/80 backdrop-blur-sm text-white'
-                      : 'bg-gray-700/80 backdrop-blur-sm text-gray-100'
-                  }`}
-                >
-                  {msg.text}
-                </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex items-center justify-center space-x-2 text-gray-300">
-                <Loader className="animate-spin" size={16} />
-                <span>Thinking...</span>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-
-          {/* Message Input Form */}
-          <div className="chatbot-container">
-            <form onSubmit={handleSendMessage}>
-              <div className="flex items-center gap-2">
-                <select
-                  value={context}
-                  onChange={(e) => setContext(e.target.value)}
-                  className="rounded-lg bg-gray-800/80 backdrop-blur-sm text-white border-gray-700 p-2 w-32"
-                >
-                  <option value="product_inquiry">Product Inquiry</option>
-                  <option value="technical">Technical Support</option>
-                  <option value="billing">Billing</option>
-                </select>
-                
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  className="flex-grow p-2 rounded-lg bg-gray-800/80 backdrop-blur-sm text-white placeholder-gray-400"
-                  disabled={isLoading}
-                />
-                
-                <button
-                  type="submit"
-                  className="p-2 rounded-full bg-gray-700/80 hover:bg-gray-600/80 backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isLoading || !message.trim()}
-                >
-                  {isLoading ? (
-                    <Loader size={20} className="animate-spin text-white" />
-                  ) : (
-                    <Send size={20} className="text-white" />
-                  )}
-                </button>
-              </div>
-            </form>
+          <div className="header-actions">
+            <button onClick={handleCart} className="icon-button">
+              <ShoppingCart size={20} />
+            </button>
+            <button onClick={handleUserClick} className="icon-button">
+              <User size={20} />
+            </button>
           </div>
         </div>
-      </div>
+      </header>
+      
+      {/* Split Container */}
+      <div className="split-container">
+        {/* Chatbot Section - Left 50% */}
+        <ChatbotSection onBrandSelect={handleBrandSelect} />
 
-      {/* Right Screen: Laptops Section */}
-      <div className="right-screen">
-        <LaptopSection
-          handleHpClick={handleHpClick}
-          handleDellClick={handleDellClick}
-        />
+        {/* Right 50% - Dynamic Component */}
+        <div className="laptop-section-container">
+          {renderRightComponent()}
+        </div>
       </div>
     </div>
   );
