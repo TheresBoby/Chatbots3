@@ -53,16 +53,20 @@ def get_laptops_by_brand(brand):
 
 # Add this after your existing Firebase initialization
 def update_scheduled_purchase(user_id: str, laptop_id: str, max_amount: float, current_price: float):
-    """Update or add a scheduled purchase to Firebase"""
+    """Update or add a scheduled purchase to Firebase with auto-generated ID"""
     try:
-        scheduled_ref = db.collection("scheduled_purchases").document(f"{user_id}_{laptop_id}")
-        scheduled_ref.set({
+        # Reference the collection
+        scheduled_ref = db.collection("scheduled_purchases")
+        
+        # Add new document with auto-generated ID
+        scheduled_ref.add({
             "user_id": user_id,
             "laptop_id": laptop_id,
             "max_amount": max_amount,
             "current_price": current_price,
             "notify": current_price > max_amount,
-            "created_at": firestore.SERVER_TIMESTAMP
+            "created_at": firestore.SERVER_TIMESTAMP,
+            #"laptop_name": laptop_name
         })
         return True
     except Exception as e:
@@ -75,7 +79,7 @@ def get_user_scheduled_purchases(user_id: str):
         scheduled_ref = db.collection("scheduled_purchases")
         query = scheduled_ref.where("user_id", "==", user_id)
         docs = query.get()
-        return [doc.to_dict() for doc in docs]
+        return [{**doc.to_dict(), "schedule_id": doc.id} for doc in docs]  # Include document ID
     except Exception as e:
         print(f"Error getting scheduled purchases: {str(e)}")
         return []
@@ -350,94 +354,111 @@ async def handle_support_request(request: SupportRequest):
         )
 
     elif request.info == 'schedule':
-        # Initial schedule request - ask for max amount
         laptop_details = read_data(request.query)
         if laptop_details:
             laptop_name = laptop_details.get('title', request.query)
-            response_text = f"Please enter the maximum amount you can afford for {laptop_name} (numbers only):"
+            price = laptop_details.get('price', 'N/A')
+            response_text = (
+                f"You're scheduling a purchase for {laptop_name} (Current price: {price})\n"
+                f"Please enter the maximum amount you can afford (numbers only):"
+            )
+            return SupportResponse(
+                response=response_text,
+                context=request.query,  # Store the laptop ID in context
+                info='schedule',
+                ui_actions=[]
+            )
         else:
-            response_text = "Error: Could not find laptop details"
-        
-        return SupportResponse(
-            response=response_text,
-            context=request.context,
-            info='schedule',
-            ui_actions=ui_actions
-        )
-        # When submitting the schedule amount
+            return SupportResponse(
+                response="Error: Could not find laptop details",
+                context=request.context,
+                info=request.info,
+                ui_actions=[]
+            )
 
     elif request.info == 'schedule_amount':
         try:
+            # First, ensure we have a user ID
             if not request.user_id:
                 return SupportResponse(
-                    response="Please login to schedule a purchase.",
+                    response="Please login to schedule a purchase",
                     context=request.context,
                     info='schedule',
-                    ui_actions=ui_actions
+                    ui_actions=[]
                 )
 
+            # Parse amount and get laptop ID from context
             max_amount = float(request.query.replace('₹', '').replace(',', ''))
-            laptop_id = request.context
-            
+            laptop_id = request.context  # This should be the laptop ID from the previous schedule request
+
+            # Get laptop details
             laptop_details = read_data(laptop_id)
             if not laptop_details:
                 return SupportResponse(
-                    response=f"Error: Could not find details for the selected laptop",
+                    response=f"Error: Could not find laptop details",
                     context=request.context,
                     info=request.info,
-                    ui_actions=ui_actions
+                    ui_actions=[]
                 )
-            
+
+            # Get current price - remove ₹ and commas, then convert to float
             price_str = laptop_details.get('price', '0')
             current_price = float(price_str.replace('₹', '').replace(',', ''))
             laptop_name = laptop_details.get('title', laptop_id)
-            
-            # Update in Firebase
-            success = update_scheduled_purchase(
-                user_id=request.user_id,
-                laptop_id=laptop_id,
-                max_amount=max_amount,
-                current_price=current_price
-            )
-            
-            if not success:
+
+            try:
+                # Create scheduled purchase in Firebase
+                scheduled_ref = db.collection("scheduled_purchases")
+                doc_ref = scheduled_ref.add({
+                    "user_id": request.user_id,
+                    "laptop_id": laptop_id,
+                    "laptop_name": laptop_name,
+                    "max_amount": max_amount,
+                    "current_price": current_price,
+                    "notify": current_price > max_amount,
+                    "created_at": firestore.SERVER_TIMESTAMP,
+                    "status": "pending" if current_price > max_amount else "ready"
+                })
+
+                # Prepare response based on price comparison
+                if current_price <= max_amount:
+                    response_text = (
+                        f"Great news! The {laptop_name} (₹{current_price:,.2f}) is within "
+                        f"your budget of ₹{max_amount:,.2f}. Your scheduled purchase has been confirmed!"
+                    )
+                else:
+                    response_text = (
+                        f"The {laptop_name} currently costs ₹{current_price:,.2f}, which is "
+                        f"above your maximum budget of ₹{max_amount:,.2f}. We'll notify you "
+                        f"when the price drops below your budget."
+                    )
+
+                return SupportResponse(
+                    response=response_text,
+                    context=laptop_id,  # Keep the laptop ID in context
+                    info=request.info,
+                    ui_actions=[{
+                        "type": "schedulePurchase",
+                        "status": "success",
+                        "scheduleId": doc_ref[1].id
+                    }]
+                )
+
+            except Exception as e:
+                print(f"Firebase error: {str(e)}")
                 return SupportResponse(
                     response="Failed to save your scheduled purchase. Please try again.",
                     context=request.context,
                     info=request.info,
-                    ui_actions=ui_actions
+                    ui_actions=[]
                 )
 
-            # Get user's scheduled items count
-            scheduled_items = get_user_scheduled_purchases(request.user_id)
-            scheduled_count = len([item for item in scheduled_items if item["notify"]])
-            
-            if current_price <= max_amount:
-                response_text = (
-                    f"Great news! The {laptop_name} (₹{current_price:,.2f}) is within "
-                    f"your budget of ₹{max_amount:,.2f}. Your purchase has been confirmed!"
-                )
-            else:
-                response_text = (
-                    f"The {laptop_name} currently costs ₹{current_price:,.2f}, which is above "
-                    f"your maximum budget of ₹{max_amount:,.2f}. We'll notify you when the "
-                    f"price drops below your budget.\n\n"
-                    f"You have {scheduled_count} laptop(s) in your scheduled purchases."
-                )
-            
-            return SupportResponse(
-                response=response_text,
-                context=request.context,
-                info=request.info,
-                ui_actions=ui_actions
-            )
-            
         except ValueError:
             return SupportResponse(
-                response="Please enter a valid number for the maximum amount (e.g., 50000).",
+                response="Please enter a valid number (e.g., 50000)",
                 context=request.context,
-                info='schedule',  # Reset to schedule to try again
-                ui_actions=ui_actions
+                info='schedule',
+                ui_actions=[]
             )
         except Exception as e:
             print(f"Error in schedule_amount: {str(e)}")  # Debug log
