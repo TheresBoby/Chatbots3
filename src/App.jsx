@@ -8,8 +8,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import Login from "./Components/pages/Login";
 import SignUp from "./Components/pages/Signup";
 import FirstPage from "./Components/pages/FirstPage";
-import HpPage from "./Components/pages/HpPage";
-import DellPage from "./Components/pages/DellPage";
+import LaptopPage from "./Components/pages/LaptopPage";
 import Purchase from "./Components/pages/Purchase";
 import CartPage from "./Components/pages/Cart";
 import UserManagement from "./Components/pages/UserManagement";
@@ -17,7 +16,7 @@ import AdminDashboard from "./Components/pages/AdminDashboard";
 import AdminHome from "./Components/pages/AdminHome";
 import Order from "./Components/pages/order"; // ✅ Import Order.jsx
 import ViewOrders from "./Components/pages/ViewOrders";
-import LaptopPage from "./Components/pages/LaptopPage";
+
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -74,8 +73,7 @@ function App() {
                 } />
                 
                 {/* Other Protected Routes */}
-                <Route path="/hppage" element={<ProtectedRoute><HpPage /></ProtectedRoute>} />
-                <Route path="/dellpage" element={<ProtectedRoute><DellPage /></ProtectedRoute>} />
+                             
                 <Route path="/purchase" element={<ProtectedRoute><Purchase /></ProtectedRoute>} />
                 <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
                 <Route path="/order" element={<ProtectedRoute><Order /></ProtectedRoute>} />

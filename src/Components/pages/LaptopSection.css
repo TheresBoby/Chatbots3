@@ -113,6 +113,48 @@
   background: rgba(59, 130, 246, 0.4);
 }
 
+/* Add or update these button styles */
+.button-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.add-cart-button, .buy-button {
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.add-cart-button {
+  background-color: #0a74da;
+  color: white;
+  border: none;
+}
+
+.add-cart-button:hover {
+  background-color: #0961b9;
+}
+
+.add-cart-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.buy-button {
+  background-color: #22c55e;
+  color: white;
+  border: none;
+}
+
+.buy-button:hover {
+  background-color: #16a34a;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .laptop-grid {

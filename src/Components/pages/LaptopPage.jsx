@@ -88,20 +88,19 @@ const LaptopPage = ({ brand }) => {
               </div>
               <div className="laptop-info">
                 <h3 className="laptop-name">{product.title}</h3>
-                <p className="laptop-description">{product.description}</p>
                 <div className="price-info">
                   <p className="laptop-price">{product.price}</p>
                   <p className="laptop-original-price">{product.discountPrice}</p>
                   <span className="discount-tag">{product.discount}</span>
                 </div>
-                <p className="rating">{product.rating}</p>
+                <p className="laptop-description">{product.description}</p>
                 <div className="button-group">
                   <button 
                     className="add-cart-button"
                     onClick={() => handleAddToCart(product)}
                     disabled={addingToCart === product.id}
                   >
-                    {addingToCart === product.id ? 'Adding...' : 'Add to Cart'}
+                    {addingToCart === product.id ? '...' : 'Add to Cart'}
                   </button>
                   <button 
                     className="buy-button"
