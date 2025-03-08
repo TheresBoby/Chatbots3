@@ -1,184 +1,148 @@
-import React from "react";
-import "../../App.css"; // Link your CSS file here
+import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FaShoppingCart } from "react-icons/fa";
-import { useNavigate, useLocation } from "react-router-dom"; // Import useNavigate and useLocation
-import { useCart } from "../../contexts/CartContext"; // Import useCart from CartContext
+import { getAuth } from "firebase/auth";
+import { useCart } from "../../contexts/CartContext";
+import "./Purchase.css";
 
 function PurchasePage() {
   const navigate = useNavigate();
-  const location = useLocation(); // Get the location object which contains the state passed from hppage.jsx
-
-  const product = location.state?.product; // Retrieve the product from location state
-
-  const { addToCart } = useCart(); // Access addToCart from CartContext
+  const location = useLocation();
+  const auth = getAuth();
+  const { addToCart } = useCart();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(0);
+  
+  const { product, buyNow } = location.state || {};
 
   if (!product) {
-    return <div>No product selected!</div>; // In case no product is passed
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-900">
+        <div className="text-xl text-white">No product selected!</div>
+      </div>
+    );
   }
 
-  // Function to add item to the cart and navigate to the cart page
-  const handleCartClick = () => {
-    addToCart(product); // Add the current product to the cart
-    navigate("/cart"); // Navigate to the cart page
+  const handleAddToCart = async () => {
+    if (!auth.currentUser) {
+      setError("Please login to add items to cart");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      await addToCart(product);
+      navigate("/cart");
+    } catch (error) {
+      setError("Failed to add item to cart");
+      console.error("Cart error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBuyNow = () => {
+    if (!auth.currentUser) {
+      setError("Please login to proceed with purchase");
+      return;
+    }
+
+    navigate("/order", { 
+      state: { 
+        product,
+        quantity: 1
+      } 
+    });
   };
 
   return (
-    <div
-      className="product-page"
-      style={{ width: "100%", height: "100%", backgroundColor: "#808080" }}
-    >
-      {/* Search Bar Container */}
-      <div
-        className="search-bar-container"
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#000', // Black container background
-          padding: '15px',
-          borderRadius: '8px',
-          maxWidth: '100%', // Black container takes up full width
-          margin: '0 auto',
-        }}
-      >
-        <div
-          className="search-bar-wrapper"
-          style={{
-            maxWidth: '600px', // Controls the search bar's width
-            width: '100%', // Ensures responsiveness
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {/* Menu Icon */}
-          <div className="menu-icon" style={{ marginRight: '10px' }}>
-            <button
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#fff', // White menu icon for contrast
-                fontSize: '20px',
-                cursor: 'pointer',
-              }}
-            >
-              ☰
-            </button>
-          </div>
-
-          {/* Search Bar */}
-          <div
-            className="search-bar"
-            style={{
-              display: 'flex',
-              flexGrow: 1,
-              backgroundColor: '#333', // Dark grey background for the search bar itself
-              borderRadius: '5px', // Smooth edges
-              padding: '5px',
-            }}
-          >
-            <input
-              type="text"
-              placeholder="What are you looking for?"
-              style={{
-                flexGrow: 1,
-                padding: '10px',
-                borderRadius: '4px 0 0 4px', // Rounded edges for the input
-                border: 'none', // Removes default input border
-                outline: 'none', // Removes the focus border
-              }}
-            />
-            <button
-              className="search-button"
-              style={{
-                backgroundColor: '#555', // Slightly lighter grey for button
-                color: '#fff',
-                border: 'none',
-                borderRadius: '0 4px 4px 0', // Rounded edges for the button
-                padding: '10px 20px',
-                cursor: 'pointer',
-              }}
-            >
-              🔍
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Header with Cart Icon */}
-      <header
-        className="header"
-        style={{
-          position: "relative",
-          padding: "20px",
-          backgroundColor: "#fff",
-        }}
-      >
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-black font-bold">Laptop Store</h1>
-
-          {/* Cart Icon in the top-right corner */}
-          <div
-            className="cart-icon"
-            style={{
-              position: "absolute",
-              top: "20px",
-              right: "20px",
-              cursor: "pointer",
-            }}
-            onClick={handleCartClick} // Trigger cart navigation on click
-          >
-            <FaShoppingCart size={30} color="#000" />
-          </div>
+    <div className="product-page">
+      {/* Header */}
+      <header className="header">
+        <h1>Laptop Store</h1>
+        <div className="search-cart">
+          <input
+            type="text"
+            placeholder="Search products..."
+            className="search-input"
+          />
+          <button onClick={() => navigate("/cart")} className="cart-button">
+            <FaShoppingCart size={24} />
+          </button>
         </div>
       </header>
 
-      {/* Product Display */}
-      <div
-        className="container mx-auto mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 px-4"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "20px",
-        }}
-      >
-        {/* Product Image (Left Column) */}
+      {error && (
+        <div className="error-message">
+          {error}
+        </div>
+      )}
+
+      {/* Product Content */}
+      <div className="content">
+        {/* Image Gallery */}
         <div className="image-gallery">
-          <div className="product-image">
-            <img
-              src={product.image}
-              style={{ width: "230px", height: "230px" }}
-              alt="Laptop Image"
-              className="main-image"
-            />
-          </div>
+          {product.images?.map((image, index) => (
+            <div
+              key={index}
+              className={`thumbnail ${selectedImage === index ? 'selected' : ''}`}
+              onClick={() => setSelectedImage(index)}
+            >
+              <img src={image} alt={`${product.title} - ${index + 1}`} />
+            </div>
+          ))}
         </div>
 
-        {/* Product Details (Right Column) */}
-        <div
-          className="product-details"
-          style={{
-            maxWidth: "500px",
-            padding: "20px",
-            backgroundColor: "#808080",
-            borderRadius: "8px",
-          }}
-        >
-          <h2 className="text-xl font-semibold">{product.title}</h2>
-          <p>{product.description || "No description available"}</p>
-          <p className="price">
-            {product.price}{" "}
-            <span className="mrp">MRP: {product.discountPrice}</span>{" "}
-            <span className="discount">({product.discount})</span>
-          </p>
-          <p className="emi">EMI Options available</p>
+        {/* Main Product Image */}
+        <div className="product-image">
+          <img
+            src={product.images?.[selectedImage] || product.image}
+            alt={product.title}
+            className="main-image"
+          />
+        </div>
 
-          <button
-            className="bg-blue-600 px-4 py-1 rounded text-white hover:bg-white"
-            onClick={handleCartClick} // Add item to cart and navigate
-          >
-            Add to Cart
-          </button>
+        {/* Product Details */}
+        <div className="product-details">
+          <h2>{product.title}</h2>
+          <p className="description">{product.description}</p>
+          
+          <div className="price-section">
+            <span className="price">{product.price}</span>
+            <span className="mrp">{product.discountPrice}</span>
+            <span className="discount">{product.discount} OFF</span>
+          </div>
+
+          <div className="specifications">
+            <h4>Key Features</h4>
+            <ul>
+              {product.specifications?.map((spec, index) => (
+                <li key={index}>{spec}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="action-buttons">
+            {!buyNow && (
+              <button 
+                onClick={handleAddToCart}
+                disabled={loading}
+                className="add-to-cart-btn"
+              >
+                {loading ? 'Adding...' : 'Add to Cart'}
+              </button>
+            )}
+            <button 
+              onClick={handleBuyNow}
+              disabled={loading}
+              className={`buy-now-btn ${buyNow ? 'full-width' : ''}`}
+            >
+              {loading ? 'Processing...' : 'Buy Now'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

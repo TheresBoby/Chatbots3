@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../firebase/firebase';
+import { useCart } from '../../contexts/CartContext';
 import './LaptopSection.css';
 
 const LaptopPage = ({ brand }) => {
-const navigate = useNavigate();
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [addingToCart, setAddingToCart] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -43,16 +46,26 @@ const navigate = useNavigate();
     }
   }, [brand]);
 
-  const handleBuyNow = (product) => {
+  const handleAddToCart = async (product) => {
     try {
-      // Navigate to purchase page with product details
-      navigate('/purchase', { 
-        state: { product } 
-      });
+      setAddingToCart(product.id);
+      await addToCart(product);
+      alert('Added to cart successfully!');
     } catch (error) {
-      console.error("Error in buy now:", error);
-      alert('Failed to process purchase. Please try again.');
+      console.error("Error adding to cart:", error);
+      alert(error.message);
+    } finally {
+      setAddingToCart(null);
     }
+  };
+
+  const handleBuyNow = (product) => {
+    navigate('/purchase', { 
+      state: { 
+        product,
+        buyNow: true // Flag to indicate direct purchase
+      } 
+    });
   };
 
   if (loading) {
@@ -76,15 +89,32 @@ const navigate = useNavigate();
               <div className="laptop-info">
                 <h3 className="laptop-name">{product.title}</h3>
                 <p className="laptop-description">{product.description}</p>
-                <p className="laptop-price text-green-400 font-bold">{product.price}</p>
-                <p className="text-white line-through">{product.discountPrice}</p>
-                <p className="text-yellow-300">{product.rating}</p>
-                <button className="view-button" onClick={() => handleBuyNow(product)}>Buy Now</button>
+                <div className="price-info">
+                  <p className="laptop-price">{product.price}</p>
+                  <p className="laptop-original-price">{product.discountPrice}</p>
+                  <span className="discount-tag">{product.discount}</span>
+                </div>
+                <p className="rating">{product.rating}</p>
+                <div className="button-group">
+                  <button 
+                    className="add-cart-button"
+                    onClick={() => handleAddToCart(product)}
+                    disabled={addingToCart === product.id}
+                  >
+                    {addingToCart === product.id ? 'Adding...' : 'Add to Cart'}
+                  </button>
+                  <button 
+                    className="buy-button"
+                    onClick={() => handleBuyNow(product)}
+                  >
+                    Buy Now
+                  </button>
+                </div>
               </div>
             </div>
           ))
         ) : (
-          <p className="text-white">No laptops available for this brand.</p>
+          <p className="no-products">No laptops available for this brand.</p>
         )}
       </div>
     </div>

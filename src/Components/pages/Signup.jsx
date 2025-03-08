@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { db, auth } from "../../firebase/firebase.js"; // Adjust path as needed
-
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth"; // Import Firebase Auth methods
-import { collection, addDoc } from "firebase/firestore"; // Import Firestore methods
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import "./signup.css"; // Import the CSS file
 
 const SignUp = () => {
   const [formValues, setFormValues] = useState({
@@ -23,194 +23,115 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Validate inputs
-    if (!formValues.name) {
-      setErrorMessage("Name is required!");
-      return;
-    }
-
+    
+    // Validate passwords match
     if (formValues.password !== formValues.confirmPassword) {
-      setErrorMessage("Passwords do not match!");
-      return;
-    }
-
-    if (formValues.email === "" || formValues.password === "") {
-      setErrorMessage("All fields are required!");
+      setErrorMessage("Passwords do not match");
       return;
     }
 
     try {
-      // Create user with Firebase Authentication
+      // 1. Create authentication user
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formValues.email,
         formValues.password
       );
+
+      // 2. Get the user object
       const user = userCredential.user;
 
-      // Save user details to Firestore
-      await addDoc(collection(db, "users"), {
+      // 3. Create user document in Firestore
+      const userData = {
         uid: user.uid,
         name: formValues.name,
         email: formValues.email,
         createdAt: new Date(),
-      });
+        wallet: 0,
+        totalOrders: 0,
+        lastOrderDate: null,
+        avatar: ''
+      };
 
-      // Update user's displayName in Firebase Authentication
+      // 4. Set the document in Firestore
+      await setDoc(doc(db, 'users', user.uid), userData);
+
+      // 5. Update auth profile
       await updateProfile(user, {
-        displayName: formValues.name,
+        displayName: formValues.name
       });
 
-      setErrorMessage(""); // Clear any error messages
-      alert("Account created successfully!");
-      navigate("/firstpage"); // Redirect to the first page
+      // 6. Clear error and redirect
+      setErrorMessage('');
+      navigate('/firstpage');
+      
     } catch (error) {
-      console.error("Error:", error);
-      setErrorMessage(`Error: ${error.message}`);
+      console.error('Signup error:', error);
+      setErrorMessage(error.message);
     }
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        backgroundColor: "#000", // Black background
-        color: "#fff", // Light text color
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "450px",
-          backgroundColor: "#1a1a1a", // Slightly lighter black for form container
-          padding: "40px",
-          borderRadius: "10px",
-          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.8)", // Subtle shadow for depth
-        }}
-      >
-        <h2 style={{ textAlign: "center", color: "#fff", marginBottom: "20px" }}>
-          Sign Up
-        </h2>
+    <div className="signup-container">
+      <div className="signup-box">
+        <h2>Sign Up</h2>
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "15px" }}>
-            <label style={{ color: "#ccc" }}>Name</label>
-            <input
-              type="text"
-              name="name"
-              placeholder="Enter your name"
-              value={formValues.name}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "12px",
-                marginTop: "5px",
-                borderRadius: "5px",
-                border: "1px solid #444",
-                backgroundColor: "#2b2b2b",
-                color: "#fff",
-                fontSize: "16px",
-              }}
-            />
+          <div className="form-group">
+            <label>Name</label>
+            <div className="input-container">
+              <input
+                type="text"
+                name="name"
+                placeholder="Enter your name"
+                value={formValues.name}
+                onChange={handleChange}
+              />
+            </div>
           </div>
-          <div style={{ marginBottom: "15px" }}>
-            <label style={{ color: "#ccc" }}>Email</label>
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              value={formValues.email}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "12px",
-                marginTop: "5px",
-                borderRadius: "5px",
-                border: "1px solid #444",
-                backgroundColor: "#2b2b2b",
-                color: "#fff",
-                fontSize: "16px",
-              }}
-            />
+          <div className="form-group">
+            <label>Email</label>
+            <div className="input-container">
+              <input
+                type="email"
+                name="email"
+                placeholder="Enter your email"
+                value={formValues.email}
+                onChange={handleChange}
+              />
+            </div>
           </div>
-          <div style={{ marginBottom: "15px" }}>
-            <label style={{ color: "#ccc" }}>Password</label>
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter your password"
-              value={formValues.password}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "12px",
-                marginTop: "5px",
-                borderRadius: "5px",
-                border: "1px solid #444",
-                backgroundColor: "#2b2b2b",
-                color: "#fff",
-                fontSize: "16px",
-              }}
-            />
+          <div className="form-group">
+            <label>Password</label>
+            <div className="input-container">
+              <input
+                type="password"
+                name="password"
+                placeholder="Enter your password"
+                value={formValues.password}
+                onChange={handleChange}
+              />
+            </div>
           </div>
-          <div style={{ marginBottom: "15px" }}>
-            <label style={{ color: "#ccc" }}>Confirm Password</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              placeholder="Confirm your password"
-              value={formValues.confirmPassword}
-              onChange={handleChange}
-              style={{
-                width: "100%",
-                padding: "12px",
-                marginTop: "5px",
-                borderRadius: "5px",
-                border: "1px solid #444",
-                backgroundColor: "#2b2b2b",
-                color: "#fff",
-                fontSize: "16px",
-              }}
-            />
+          <div className="form-group">
+            <label>Confirm Password</label>
+            <div className="input-container">
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm your password"
+                value={formValues.confirmPassword}
+                onChange={handleChange}
+              />
+            </div>
           </div>
-          {errorMessage && (
-            <p style={{ color: "#e74c3c", fontSize: "14px", textAlign: "center" }}>
-              {errorMessage}
-            </p>
-          )}
-          <button
-            type="submit"
-            style={{
-              width: "100%",
-              padding: "12px",
-              backgroundColor: "#4CAF50", // Green button
-              color: "#fff",
-              border: "none",
-              borderRadius: "5px",
-              fontSize: "16px",
-              cursor: "pointer",
-              marginBottom: "15px",
-              transition: "background-color 0.3s",
-            }}
-            onMouseOver={(e) => (e.target.style.backgroundColor = "#45a049")}
-            onMouseOut={(e) => (e.target.style.backgroundColor = "#4CAF50")}
-          >
+          {errorMessage && <p className="error">{errorMessage}</p>}
+          <button type="submit" className="signup-btn">
             Sign Up
           </button>
         </form>
-        <div style={{ textAlign: "center" }}>
-          <p style={{ fontSize: "14px", color: "#ccc" }}>
-            Already have an account?{" "}
-            <a
-              href="/login"
-              style={{ color: "#4CAF50", textDecoration: "none", fontWeight: "bold" }}
-            >
-              Login here
-            </a>
-          </p>
+        <div className="login-text">
+          Already have an account?{" "}
+          <a href="/">Login here</a>
         </div>
       </div>
     </div>

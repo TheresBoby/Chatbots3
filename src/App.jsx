@@ -1,6 +1,8 @@
 import React, { Suspense } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
+import { auth } from './firebase/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 // Components
 import Login from "./Components/pages/Login";
@@ -17,17 +19,36 @@ import Order from "./Components/pages/order"; // ✅ Import Order.jsx
 import ViewOrders from "./Components/pages/ViewOrders";
 import LaptopPage from "./Components/pages/LaptopPage";
 
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const [user, loading] = useAuthState(auth);
+  
+  if (loading) {
+    return <div>Loading authentication...</div>;
+  }
+  
+  if (!user) {
+    return <Navigate to="/" />;
+  }
+
+  return children;
+};
+
 function App() {
-  const user = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    wallet: 120.5,
+  const [user, loading] = useAuthState(auth);
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      console.log("User logged out successfully");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
-  const handleLogout = () => {
-    console.log("User logged out");
-    // Add logout logic here
-  };
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <CartProvider>
@@ -37,23 +58,31 @@ function App() {
             <Suspense fallback={<div>Loading Content... Please wait.</div>}>
               <Routes>
                 {/* Authentication Routes */}
-                <Route path="/" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
+                <Route path="/" element={!user ? <Login /> : <Navigate to="/FirstPage" />} />
+                <Route path="/signup" element={!user ? <SignUp /> : <Navigate to="/FirstPage" />} />
 
-                {/* Main Pages */}
-                <Route path="/FirstPage" element={<FirstPage />} />
-                <Route path="/hppage" element={<HpPage />} />
-                <Route path="/dellpage" element={<DellPage />} />
-                <Route path="/purchase" element={<Purchase />} />
-                <Route path="/cart" element={<CartPage />} />
-                <Route path="/order" element={<Order />} /> {/* ✅ Added Order Route */}
-                <Route path="/vieworders" element={<ViewOrders />} />
-                <Route path="/laptops/:brand" element={<LaptopPage />} />
-                {/* Admin & User Management */}
-                <Route
-                  path="/user-management"
-                  element={<UserManagement user={user} onLogout={handleLogout} />}
-                />
+                {/* Protected Routes */}
+                <Route path="/FirstPage" element={
+                  <ProtectedRoute>
+                    <FirstPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/user-management" element={
+                  <ProtectedRoute>
+                    <UserManagement user={user} onLogout={handleLogout} />
+                  </ProtectedRoute>
+                } />
+                
+                {/* Other Protected Routes */}
+                <Route path="/hppage" element={<ProtectedRoute><HpPage /></ProtectedRoute>} />
+                <Route path="/dellpage" element={<ProtectedRoute><DellPage /></ProtectedRoute>} />
+                <Route path="/purchase" element={<ProtectedRoute><Purchase /></ProtectedRoute>} />
+                <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+                <Route path="/order" element={<ProtectedRoute><Order /></ProtectedRoute>} />
+                <Route path="/vieworders" element={<ProtectedRoute><ViewOrders /></ProtectedRoute>} />
+                <Route path="/laptops/:brand" element={<ProtectedRoute><LaptopPage /></ProtectedRoute>} />
+
+                {/* Admin Routes */}
                 <Route path="/admindashboard" element={<AdminDashboard />} />
                 <Route path="/adminhome" element={<AdminHome />} />
               </Routes>
