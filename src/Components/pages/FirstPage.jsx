@@ -11,6 +11,7 @@ const FirstPage = () => {
   const navigate = useNavigate();
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [showUserManagement, setShowUserManagement] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(''); // Search state
 
   const handleLaptopClick = (brand) => {
     setSelectedBrand(brand);
@@ -27,10 +28,9 @@ const FirstPage = () => {
   };
 
   const handleCart = () => {
-    // Instead of navigating, we'll handle this in our component
     setShowUserManagement(false);
     setSelectedBrand(null);
-    // You could set a state variable like showCart to true here
+    navigate('/cart'); // Navigate to the cart page
   };
 
   const handleBrandSelect = (brand) => {
@@ -38,14 +38,19 @@ const FirstPage = () => {
     setShowUserManagement(false);
   };
 
+  // Update search query when user types
+  const handleSearchChange = (event) => {
+    setSearchQuery(event.target.value);
+  };
+
   // Determine which component to show on the right side
   const renderRightComponent = () => {
     if (showUserManagement) {
       return <UserManagement onLogout={handleLogout} />;
     } else if (selectedBrand) {
-      return <LaptopPage brand={selectedBrand} />;
+      return <LaptopPage brand={selectedBrand} searchQuery={searchQuery} />; // Pass search query
     } else {
-      return <LaptopSection onLaptopClick={handleLaptopClick} />;
+      return <LaptopSection onLaptopClick={handleLaptopClick} searchQuery={searchQuery} />; // Pass search query
     }
   };
 
@@ -56,7 +61,13 @@ const FirstPage = () => {
         <div className="header-content">
           <h1 className="header-title">Smart Support</h1>
           <div className="search-container">
-            <input type="text" placeholder="What are you looking for?" className="search-input" />
+            <input
+              type="text"
+              placeholder="What are you looking for?"
+              className="search-input"
+              value={searchQuery} // Bind searchQuery state
+              onChange={handleSearchChange} // Handle input changes
+            />
             <Search className="search-icon" size={16} />
           </div>
           <div className="header-actions">

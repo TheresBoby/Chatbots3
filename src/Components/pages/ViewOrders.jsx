@@ -65,7 +65,7 @@ const ViewOrders = () => {
   }, [startDate, endDate, orders]);
 
   return (
-    <div className="min-h-screen bg-black p-6 text-white">
+    <div className="h-1/2 bg-black p-6 text-white overflow-auto">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

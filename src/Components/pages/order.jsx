@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, collection, addDoc } from "firebase/firestore";
-
+import ChatbotSection from './ChatbotSection'; // Import the ChatbotSection component
+import './Order.css'; // Import the CSS file
 
 const Order = () => {
   const location = useLocation();
@@ -52,32 +53,40 @@ const Order = () => {
   }, [user, product, db]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
-      <h1 className="text-3xl font-bold">Order Confirmation</h1>
+    <div className="split-container">
+      {/* Chatbot Section - Left 50% */}
+      <ChatbotSection />
 
-      {error ? (
-        <p className="text-red-500 mt-4">{error}</p>
-      ) : orderId ? (
-        <div className="mt-4 p-4 bg-gray-800 rounded-lg text-center">
-          <p className="text-green-400 text-lg">Order ID: {orderId}</p>
-          {product && (
-            <>
-              <img src={product.image} alt={product.title} className="w-60 mx-auto" />
-              <h2 className="mt-2 font-semibold">{product.title}</h2>
-              <p className="text-green-400">{product.price}</p>
-            </>
+      {/* Order Section - Right 50% */}
+      <div className="order-section">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
+          <h1 className="text-3xl font-bold">Order Confirmation</h1>
+
+          {error ? (
+            <p className="text-red-500 mt-4">{error}</p>
+          ) : orderId ? (
+            <div className="mt-4 p-4 bg-gray-800 rounded-lg text-center">
+              <p className="text-green-400 text-lg">Order ID: {orderId}</p>
+              {product && (
+                <>
+                  <img src={product.image} alt={product.title} className="w-60 mx-auto" />
+                  <h2 className="mt-2 font-semibold">{product.title}</h2>
+                  <p className="text-green-400">{product.price}</p>
+                </>
+              )}
+            </div>
+          ) : (
+            <p className="text-gray-400 mt-4">Placing your order...</p>
           )}
-        </div>
-      ) : (
-        <p className="text-gray-400 mt-4">Placing your order...</p>
-      )}
 
-      <button
-        className="mt-6 px-4 py-2 bg-blue-600 rounded hover:bg-blue-400"
-        onClick={() => navigate("/")}
-      >
-        Go Back to Home
-      </button>
+          <button
+            className="mt-6 px-4 py-2 bg-blue-600 rounded hover:bg-blue-400"
+            onClick={() => navigate("/")}
+          >
+            Go Back to Home
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,0 +1,16 @@
+.split-container {
+  display: flex;
+  height: 100vh; /* Full viewport height */
+}
+
+.chatbot-section {
+  flex: 1; /* Take up 50% of the width */
+  background-color: #070707; /* Light grey background for the chatbot section */
+  overflow-y: auto; /* Enable scrolling if content overflows */
+}
+
+.order-section {
+  flex: 1; /* Take up the remaining 50% of the width */
+  padding: 20px; /* Add some padding */
+  overflow-y: auto; /* Enable scrolling if content overflows */
+}
