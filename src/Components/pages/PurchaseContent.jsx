@@ -5,6 +5,81 @@ import { useNavigate, useLocation } from "react-router-dom"; // Import useNaviga
 import { useCart } from "../../contexts/CartContext"; // Import useCart from CartContext
 import ChatbotSection from './ChatbotSection'; // Import the ChatbotSection component
 import './Order.css'; // Import the CSS file
+import './PurchaseContent.css';
+
+const PurchaseContent = ({ product, onBack }) => {
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+
+  if (!product) {
+    return <div className="no-product">No product selected!</div>;
+  }
+
+  const handleAddToCart = async () => {
+    try {
+      await addToCart(product);
+      navigate("/cart");
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+    }
+  };
+
+  const handleBuyNow = () => {
+    navigate("/order", { state: { product } });
+  };
+
+  return (
+    <div className="purchase-content">
+      {/* Back Button */}
+      <button onClick={onBack} className="back-button">
+        ← Back to Products
+      </button>
+
+      {/* Product Details */}
+      <div className="product-details">
+        <div className="product-image-container">
+          <img 
+            src={product.image} 
+            alt={product.title} 
+            className="product-image"
+          />
+        </div>
+
+        <div className="product-info">
+          <h2 className="product-title">{product.title}</h2>
+          <div className="price-container">
+            <span className="current-price">{product.price}</span>
+            <span className="original-price">{product.discountPrice}</span>
+            <span className="discount-tag">{product.discount}</span>
+          </div>
+          
+          <p className="description">{product.description}</p>
+
+          <div className="features">
+            <p>✓ Free Delivery</p>
+            <p>✓ EMI Available</p>
+            <p>✓ 1 Year Warranty</p>
+          </div>
+
+          <div className="action-buttons">
+            <button 
+              className="add-to-cart-btn"
+              onClick={handleAddToCart}
+            >
+              Add to Cart
+            </button>
+            <button 
+              className="buy-now-btn"
+              onClick={handleBuyNow}
+            >
+              Buy Now
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 function PurchasePage() {
   const navigate = useNavigate();
@@ -12,21 +87,13 @@ function PurchasePage() {
 
   const product = location.state?.product; // Retrieve the product from location state
 
-  const { addToCart } = useCart(); // Access addToCart from CartContext
-
   if (!product) {
     return <div>No product selected!</div>; // In case no product is passed
   }
 
-  // Function to add item to the cart and navigate to the cart page
-  const handleCartClick = () => {
-    addToCart(product); // Add the current product to the cart
-    navigate("/cart"); // Navigate to the cart page
-  };
-
-  // Function to navigate to the order page with the selected product
-  const handleBuyNowClick = () => {
-    navigate("/order", { state: { product } }); // Navigate to Order page with product details
+  // Function to navigate back to the previous page
+  const handleBackClick = () => {
+    navigate(-1); // Navigate back to the previous page
   };
 
   return (
@@ -63,50 +130,14 @@ function PurchasePage() {
               <h1 className="text-black font-bold">Laptop Store</h1>
 
               {/* Cart Icon in the top-right corner */}
-              <div className="cart-icon" style={{ position: "absolute", top: "20px", right: "20px", cursor: "pointer" }} onClick={handleCartClick}>
+              <div className="cart-icon" style={{ position: "absolute", top: "20px", right: "20px", cursor: "pointer" }} onClick={() => navigate("/cart")}>
                 <FaShoppingCart size={30} color="#000" />
               </div>
             </div>
           </header>
 
           {/* Product Display */}
-          <div className="container" style={{ display: "flex", justifyContent: "space-between", gap: "20px" }}>
-            {/* Product Image (Left Column) */}
-            <div className="image-gallery">
-              <div className="product-image">
-                <img src={product.image} style={{ width: "230px", height: "230px" }} alt="Laptop Image" className="main-image" />
-              </div>
-            </div>
-
-            {/* Product Details (Right Column) */}
-            <div className="product-details" style={{ maxWidth: "500px", padding: "20px", backgroundColor: "#808080", borderRadius: "8px" }}>
-              <h2 className="text-xl font-semibold">{product.title}</h2>
-              <p>{product.description || "No description available"}</p>
-              <div className="price-info">
-                <p className="price">
-                  {product.price}{" "}
-                  <span className="mrp">MRP: {product.discountPrice}</span>{" "}
-                  <span className="discount">({product.discount})</span>
-                </p>
-              </div>
-              <p className="emi">EMI Options available</p>
-
-              <div className="button-group">
-                <button 
-                  className="cart-button"
-                  onClick={handleCartClick}
-                >
-                  Add to Cart
-                </button>
-                <button 
-                  className="buy-button"
-                  onClick={handleBuyNowClick}
-                >
-                  Buy Now
-                </button>
-              </div>
-            </div>
-          </div>
+          <PurchaseContent product={product} onBack={handleBackClick} />
         </div>
       </div>
     </div>

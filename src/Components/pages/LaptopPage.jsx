@@ -5,7 +5,7 @@ import { db } from '../../firebase/firebase';
 import { useCart } from '../../contexts/CartContext';
 import './LaptopSection.css';
 
-const LaptopPage = ({ brand }) => {
+const LaptopPage = ({ brand, onBuyNow }) => { // Add onBuyNow prop
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
@@ -60,12 +60,9 @@ const LaptopPage = ({ brand }) => {
   };
 
   const handleBuyNow = (product) => {
-    navigate('/purchase', { 
-      state: { 
-        product,
-        buyNow: true // Flag to indicate direct purchase
-      } 
-    });
+    if (onBuyNow) {
+      onBuyNow(product);
+    }
   };
 
   if (loading) {
@@ -77,45 +74,38 @@ const LaptopPage = ({ brand }) => {
   }
 
   return (
-    <div className="laptop-section-wrapper">
-      <h2 className="section-title">{brand} Laptops</h2>
-      <div className="laptop-grid">
-        {products.length > 0 ? (
-          products.map((product) => (
-            <div key={product.id} className="laptop-card">
-              <div className="laptop-image-container">
-                <img src={product.image} alt={product.title} className="laptop-image" />
-              </div>
-              <div className="laptop-info">
-                <h3 className="laptop-name">{product.title}</h3>
-                <div className="price-info">
-                  <p className="laptop-price">{product.price}</p>
-                  <p className="laptop-original-price">{product.discountPrice}</p>
-                  <span className="discount-tag">{product.discount}</span>
-                </div>
-                <p className="laptop-description">{product.description}</p>
-                <div className="button-group">
-                  <button 
-                    className="add-cart-button"
-                    onClick={() => handleAddToCart(product)}
-                    disabled={addingToCart === product.id}
-                  >
-                    {addingToCart === product.id ? '...' : 'Add to Cart'}
-                  </button>
-                  <button 
-                    className="buy-button"
-                    onClick={() => handleBuyNow(product)}
-                  >
-                    Buy Now
-                  </button>
-                </div>
-              </div>
+    <div className="laptop-page">
+      {products.map((product) => (
+        <div key={product.id} className="product-card">
+          <div className="laptop-image-container">
+            <img src={product.image} alt={product.title} className="laptop-image" />
+          </div>
+          <div className="laptop-info">
+            <h3 className="laptop-name">{product.title}</h3>
+            <div className="price-info">
+              <p className="laptop-price">{product.price}</p>
+              <p className="laptop-original-price">{product.discountPrice}</p>
+              <span className="discount-tag">{product.discount}</span>
             </div>
-          ))
-        ) : (
-          <p className="no-products">No laptops available for this brand.</p>
-        )}
-      </div>
+            <p className="laptop-description">{product.description}</p>
+            <div className="button-group">
+              <button 
+                className="add-cart-button"
+                onClick={() => handleAddToCart(product)}
+                disabled={addingToCart === product.id}
+              >
+                {addingToCart === product.id ? '...' : 'Add to Cart'}
+              </button>
+              <button 
+                onClick={() => handleBuyNow(product)}
+                className="buy-now-button"
+              >
+                Buy Now
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

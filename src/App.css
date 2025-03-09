@@ -80,8 +80,19 @@
   display: flex;
   width: 100%;
   height: calc(100vh - 64px);
-  overflow: hidden;
-  box-sizing: border-box;
+}
+
+.left-screen {
+  width: 50%;
+  background-color: #070707;
+  overflow-y: auto;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.right-screen {
+  width: 50%;
+  overflow-y: auto;
+  background-color: #070707;
 }
 
 /* Left Half - Chatbot Section */

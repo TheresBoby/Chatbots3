@@ -161,3 +161,14 @@
     grid-template-columns: 1fr;
   }
 }
+
+.laptop-page {
+  padding: 20px;
+  color: #fff; /* Ensure text is visible on dark background */
+}
+
+.product-card {
+  background: rgba(255, 255, 255, 0.1); /* Semi-transparent card background */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  /* ...rest of your existing styles... */
+}
