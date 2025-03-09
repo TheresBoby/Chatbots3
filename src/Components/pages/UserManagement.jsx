@@ -1,89 +1,107 @@
-import React, { useEffect, useState } from 'react';
-import { Clock, CreditCard, LogOut, Package, Settings, User, Wallet } from 'lucide-react';
-import { auth, db } from '../../firebase/firebase';
-import { useNavigate } from 'react-router-dom';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import React, { useEffect, useState } from "react";
+import {
+  Clock,
+  CreditCard,
+  LogOut,
+  Package,
+  Settings,
+  User,
+  Wallet,
+} from "lucide-react";
+import { auth, db } from "../../firebase/firebase";
+import { useNavigate } from "react-router-dom";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { doc, getDoc, onSnapshot, collection, query, where } from "firebase/firestore";
 
 const UserManagement = ({ onLogout = () => {} }) => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [userData, setUserData] = useState({
-    name: 'Guest User',
-    email: 'No email provided',
-    avatar: '',
-    joinDate: 'New User',
+  const [user, setUser] = useState({
+    name: "Guest User",
+    email: "No email provided",
+    avatar: "",
+    joinDate: "New User",
     wallet: 0,
     totalOrders: 0,
-    lastOrderDate: 'No orders yet'
+    lastOrderDate: "No orders yet",
   });
 
   useEffect(() => {
-    // Listen for auth state changes
-    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
-      if (!currentUser) {
-        navigate('/');
-        return;
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        const { displayName, email, photoURL, metadata } = currentUser;
+        const userRef = doc(db, "users", currentUser.uid);
+
+        // Fetch user data in real-time
+        const unsubscribeSnapshot = onSnapshot(userRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const userData = docSnap.data();
+            setUser((prevUser) => ({
+              ...prevUser,
+              name: displayName || "No Name Provided",
+              email: email || "No email provided",
+              avatar: photoURL || "",
+              joinDate: new Date(metadata.creationTime).toLocaleDateString(),
+              wallet: userData.wallet || 0,
+            }));
+          }
+        });
+
+        // Listen to user's orders collection
+        const ordersRef = collection(db, "orders");
+        const q = query(ordersRef, where("userId", "==", currentUser.uid));
+
+        const unsubscribeOrders = onSnapshot(q, (querySnapshot) => {
+          const totalOrders = querySnapshot.size;
+          let lastOrderDate = "No orders yet";
+
+          if (!querySnapshot.empty) {
+            const lastOrder = querySnapshot.docs[querySnapshot.docs.length - 1].data();
+            lastOrderDate = new Date(lastOrder.orderDate).toLocaleDateString();
+          }
+
+          setUser((prevUser) => ({
+            ...prevUser,
+            totalOrders,
+            lastOrderDate,
+          }));
+        });
+
+        return () => {
+          unsubscribeSnapshot();
+          unsubscribeOrders();
+        };
+      } else {
+        setUser({
+          name: "Guest User",
+          email: "No email provided",
+          avatar: "",
+          joinDate: "New User",
+          wallet: 0,
+          totalOrders: 0,
+          lastOrderDate: "No orders yet",
+        });
       }
-
-      // Set up real-time listener for user data
-      const userRef = doc(db, 'users', currentUser.uid);
-      const unsubscribeSnapshot = onSnapshot(userRef, (docSnap) => {
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setUserData({
-            name: data.name || currentUser.displayName || 'Guest User',
-            email: data.email || currentUser.email || 'No email provided',
-            avatar: data.avatar || '',
-            joinDate: data.createdAt?.toDate().toLocaleDateString() || 'New User',
-            wallet: data.wallet || 0,
-            totalOrders: data.totalOrders || 0,
-            lastOrderDate: data.lastOrderDate || 'No orders yet'
-          });
-        }
-        setLoading(false);
-      }, (error) => {
-        console.error('Error fetching user data:', error);
-        setLoading(false);
-      });
-
-      return () => unsubscribeSnapshot();
     });
 
-    return () => unsubscribeAuth();
-  }, [navigate]);
+    return () => unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
       onLogout();
-      navigate('/');
     } catch (error) {
-      console.error('Logout Error:', error);
+      console.error("Logout Error:", error);
     }
   };
 
   const handleViewOrders = () => {
-    navigate('/vieworders');
+    navigate("/vieworders");
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
-
-  const {
-    name,
-    email,
-    avatar,
-    joinDate,
-    wallet,
-    totalOrders,
-    lastOrderDate
-  } = userData;
+  const handleSettings = () => {
+    console.log("Opening Settings");
+  };
 
   return (
     <div className="min-h-screen bg-black p-6">
@@ -92,18 +110,19 @@ const UserManagement = ({ onLogout = () => {} }) => {
         <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="h-24 w-24 border-2 border-zinc-700 rounded-full overflow-hidden">
-              {avatar ? (
-                <img src={avatar} alt={name} className="object-cover w-full h-full" />
+              {user.avatar ? (
+                <img src={user.avatar} alt={user.name} className="object-cover w-full h-full" />
               ) : (
                 <User className="h-12 w-12 text-zinc-400" />
               )}
             </div>
             <div className="flex-1 text-center md:text-left">
-              <h2 className="text-2xl font-bold text-white">{name}</h2>
-              <p className="text-zinc-400">{email}</p>
-              <p className="text-sm text-zinc-500">Member since {joinDate}</p>
+              <h2 className="text-2xl font-bold text-white">{user.name}</h2>
+              <p className="text-zinc-400">{user.email}</p>
+              <p className="text-sm text-zinc-500">Member since {user.joinDate}</p>
             </div>
             <button
+              onClick={handleSettings}
               className="px-4 py-2 border border-zinc-700 hover:bg-zinc-800 text-zinc-300 rounded-md flex items-center gap-2"
             >
               <Settings className="h-4 w-4" />
@@ -121,7 +140,7 @@ const UserManagement = ({ onLogout = () => {} }) => {
               </div>
               <h3 className="ml-4 text-sm font-medium text-zinc-300">Wallet Balance</h3>
             </div>
-            <div className="mt-4 text-2xl font-bold text-white">${wallet.toFixed(2)}</div>
+            <div className="mt-4 text-2xl font-bold text-white">₹{user.wallet.toFixed(2)}</div>
             <p className="text-xs text-zinc-500">Available balance</p>
           </div>
 
@@ -132,7 +151,7 @@ const UserManagement = ({ onLogout = () => {} }) => {
               </div>
               <h3 className="ml-4 text-sm font-medium text-zinc-300">Total Orders</h3>
             </div>
-            <div className="mt-4 text-2xl font-bold text-white">{totalOrders}</div>
+            <div className="mt-4 text-2xl font-bold text-white">{user.totalOrders}</div>
             <p className="text-xs text-zinc-500">Lifetime orders</p>
           </div>
 
@@ -143,7 +162,7 @@ const UserManagement = ({ onLogout = () => {} }) => {
               </div>
               <h3 className="ml-4 text-sm font-medium text-zinc-300">Last Order</h3>
             </div>
-            <div className="mt-4 text-2xl font-bold text-white">{lastOrderDate}</div>
+            <div className="mt-4 text-2xl font-bold text-white">{user.lastOrderDate}</div>
             <p className="text-xs text-zinc-500">Most recent purchase</p>
           </div>
         </div>
@@ -152,36 +171,18 @@ const UserManagement = ({ onLogout = () => {} }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
             <h3 className="text-zinc-200">Quick Actions</h3>
-            <p className="text-zinc-500">Manage your account and orders</p>
-            <div className="mt-4 space-y-4">
-              <button
-                onClick={handleViewOrders}
-                className="w-full px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-md flex items-center gap-2"
-              >
-                <Package className="h-4 w-4" />
-                View Orders
-              </button>
-              <button
-                className="w-full px-4 py-2 border border-zinc-700 hover:bg-zinc-800 text-zinc-300 rounded-md flex items-center gap-2"
-              >
-                <CreditCard className="h-4 w-4" />
-                Payment Methods
-              </button>
-            </div>
+            <button onClick={handleViewOrders} className="w-full px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-md flex items-center gap-2">
+              <Package className="h-4 w-4" />
+              View Orders
+            </button>
           </div>
 
           <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
             <h3 className="text-zinc-200">Account Security</h3>
-            <p className="text-zinc-500">Manage your account security settings</p>
-            <div className="mt-4">
-              <button
-                onClick={handleLogout} 
-                className="w-full px-4 py-2 bg-red-900/80 hover:bg-red-900 text-red-100 rounded-md flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </button>
-            </div>
+            <button onClick={handleLogout} className="w-full px-4 py-2 bg-red-900/80 hover:bg-red-900 text-red-100 rounded-md flex items-center gap-2">
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
           </div>
         </div>
       </div>
