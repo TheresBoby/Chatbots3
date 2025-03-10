@@ -155,6 +155,73 @@
   background-color: #16a34a;
 }
 
+/* Product Container */
+.product-container {
+  background-color: #2d2d2d;
+  border-radius: 1rem;
+  padding: 2rem;
+  color: white;
+}
+
+/* Product Image Container */
+.product-image-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+  background-color: #363636;
+  border-radius: 0.5rem;
+}
+
+.product-image {
+  max-width: 400px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Product Information */
+.product-info {
+  margin-top: 2rem;
+}
+
+.product-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+/* Price Container */
+.price-container {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin: 1rem 0;
+}
+
+.current-price {
+  font-size: 1.5rem;
+  color: #4ade80;
+}
+
+.original-price {
+  text-decoration: line-through;
+  color: #666;
+}
+
+/* Back Button */
+.back-button {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  transition: opacity 0.2s;
+}
+
+.back-button:hover {
+  opacity: 0.8;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .laptop-grid {

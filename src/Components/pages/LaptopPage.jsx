@@ -12,6 +12,7 @@ const LaptopPage = ({ brand, searchQuery }) => { // Accept searchQuery as prop
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [addingToCart, setAddingToCart] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -60,13 +61,51 @@ const LaptopPage = ({ brand, searchQuery }) => { // Accept searchQuery as prop
   };
 
   const handleBuyNow = (product) => {
-    navigate('/purchase', { 
-      state: { 
-        product,
-        buyNow: true // Flag to indicate direct purchase
-      } 
-    });
+    setSelectedProduct(product);
   };
+
+  if (selectedProduct) {
+    return (
+      <div className="laptop-section-wrapper">
+        <button 
+          className="back-button mb-4 text-white"
+          onClick={() => setSelectedProduct(null)}
+        >
+          ← Back to Laptops
+        </button>
+        <div className="product-container">
+          <div className="product-image-container">
+            <img
+              src={selectedProduct.image}
+              alt={selectedProduct.title}
+              className="product-image"
+            />
+          </div>
+          <div className="product-info">
+            <h2 className="product-title">{selectedProduct.title}</h2>
+            <p className="product-description">
+              {selectedProduct.description || "No description available"}
+            </p>
+            <div className="price-container">
+              <p className="current-price">{selectedProduct.price}</p>
+              <p className="original-price">{selectedProduct.discountPrice}</p>
+              <span className="discount-tag">{selectedProduct.discount}</span>
+            </div>
+            <p className="emi-text">EMI Options available</p>
+            <div className="button-group">
+              <button
+                className="add-cart-button"
+                onClick={() => handleAddToCart(selectedProduct)}
+                disabled={addingToCart === selectedProduct.id}
+              >
+                {addingToCart === selectedProduct.id ? '...' : 'Add to Cart'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Filter products based on search query
   const filteredProducts = products.filter((product) =>

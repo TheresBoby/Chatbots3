@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom"; // Import useNaviga
 import { useCart } from "../../contexts/CartContext"; // Import useCart from CartContext
 import ChatbotSection from './ChatbotSection'; // Import the ChatbotSection component
 import './Order.css'; // Import the CSS file
+import Button from '@mui/material/Button';
 
 function PurchasePage() {
   const navigate = useNavigate();
@@ -90,9 +91,7 @@ function PurchasePage() {
               <p className="emi">EMI Options available</p>
 
               {/* Buy Now Button */}
-              <button className="bg-blue-600 px-4 py-1 rounded text-white hover:bg-white" onClick={handleBuyNowClick}>
-                Buy Now
-              </button>
+              <Button variant="outlined">Buy now</Button>
             </div>
           </div>
         </div>
