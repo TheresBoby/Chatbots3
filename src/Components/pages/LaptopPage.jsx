@@ -68,7 +68,7 @@ const LaptopPage = ({ brand, searchQuery }) => { // Accept searchQuery as prop
     return (
       <div className="laptop-section-wrapper">
         <button 
-          className="back-button mb-4 text-white"
+          className="back-button"
           onClick={() => setSelectedProduct(null)}
         >
           ← Back to Laptops
@@ -81,24 +81,31 @@ const LaptopPage = ({ brand, searchQuery }) => { // Accept searchQuery as prop
               className="product-image"
             />
           </div>
-          <div className="product-info">
+          <div className="product-details">
             <h2 className="product-title">{selectedProduct.title}</h2>
-            <p className="product-description">
-              {selectedProduct.description || "No description available"}
-            </p>
-            <div className="price-container">
+            <div className="price-section">
               <p className="current-price">{selectedProduct.price}</p>
               <p className="original-price">{selectedProduct.discountPrice}</p>
               <span className="discount-tag">{selectedProduct.discount}</span>
             </div>
+            <div className="description-section">
+              <p className="product-description">
+                {selectedProduct.description || "No description available"}
+              </p>
+            </div>
             <p className="emi-text">EMI Options available</p>
-            <div className="button-group">
+            <div className="action-buttons">
               <button
-                className="add-cart-button"
-                onClick={() => handleAddToCart(selectedProduct)}
-                disabled={addingToCart === selectedProduct.id}
+                className="buy-now-button"
+                onClick={() => {
+                  navigate('/order', { 
+                    state: { 
+                      product: selectedProduct 
+                    } 
+                  });
+                }}
               >
-                {addingToCart === selectedProduct.id ? '...' : 'Add to Cart'}
+                Confirm Order
               </button>
             </div>
           </div>

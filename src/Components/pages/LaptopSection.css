@@ -221,6 +221,28 @@
 .back-button:hover {
   opacity: 0.8;
 }
+.buy-now-button {
+  background-color: #16a34a;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+  max-width: 300px;
+}
+
+.buy-now-button:hover {
+  background-color: #15803d;
+  transform: translateY(-1px);
+}
+
+.buy-now-button:active {
+  transform: translateY(0);
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {

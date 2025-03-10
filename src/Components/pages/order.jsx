@@ -61,7 +61,10 @@ const Order = () => {
       <div className="order-section">
         <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
           <h1 className="text-3xl font-bold">Order Confirmation</h1>
-
+          <div className="order-container">
+          <h1 className="order-message">Hey, your order has been placed!</h1>
+          <p className="delivery-message">Expected delivery in 4 days</p>
+        </div>
           {error ? (
             <p className="text-red-500 mt-4">{error}</p>
           ) : orderId ? (
