@@ -70,7 +70,7 @@ const ViewOrders = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <button 
-            onClick={() => navigate("/user")} 
+            onClick={() => navigate("/firstpage")} 
             className="flex items-center gap-2 text-gray-300 hover:text-white"
           >
             <ArrowLeft className="h-5 w-5" /> Back to Profile

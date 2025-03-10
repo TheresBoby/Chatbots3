@@ -81,7 +81,7 @@ const Order = () => {
 
           <button
             className="mt-6 px-4 py-2 bg-blue-600 rounded hover:bg-blue-400"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/firstpage")}
           >
             Go Back to Home
           </button>
