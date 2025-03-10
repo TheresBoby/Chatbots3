@@ -5,7 +5,6 @@ import { useNavigate, useLocation } from "react-router-dom"; // Import useNaviga
 import { useCart } from "../../contexts/CartContext"; // Import useCart from CartContext
 import ChatbotSection from './ChatbotSection'; // Import the ChatbotSection component
 import './Order.css'; // Import the CSS file
-import Button from '@mui/material/Button';
 
 function PurchasePage() {
   const navigate = useNavigate();
@@ -37,7 +36,7 @@ function PurchasePage() {
 
       {/* Purchase Section - Right 50% */}
       <div className="purchase-section">
-        <div className="product-page" style={{ width: "100%", height: "100%", backgroundColor: "#808080" }}>
+        <div className="product-page" style={{ width: "100%", height: "100%", backgroundColor: "#EBEBEB" }}>
           {/* Search Bar Container */}
           <div className="search-bar-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#000', padding: '15px', borderRadius: '8px', maxWidth: '100%', margin: '0 auto' }}>
             <div className="search-bar-wrapper" style={{ maxWidth: '600px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -48,7 +47,7 @@ function PurchasePage() {
                 </button>
               </div>
 
-              {/* Search Bar */}
+             /* {/* Search Bar */}
               <div className="search-bar" style={{ display: 'flex', flexGrow: 1, backgroundColor: '#333', borderRadius: '5px', padding: '5px' }}>
                 <input type="text" placeholder="What are you looking for?" style={{ flexGrow: 1, padding: '10px', borderRadius: '4px 0 0 4px', border: 'none', outline: 'none' }} />
                 <button className="search-button" style={{ backgroundColor: '#555', color: '#fff', border: 'none', borderRadius: '0 4px 4px 0', padding: '10px 20px', cursor: 'pointer' }}>
@@ -61,7 +60,7 @@ function PurchasePage() {
           {/* Header with Cart Icon */}
           <header className="header" style={{ position: "relative", padding: "20px", backgroundColor: "#fff" }}>
             <div className="container mx-auto flex justify-between items-center">
-              <h1 className="text-black font-bold">Laptop Store</h1>
+              <h1 className="text-black font-bold">Laptop Store</h1> 
 
               {/* Cart Icon in the top-right corner */}
               <div className="cart-icon" style={{ position: "absolute", top: "20px", right: "20px", cursor: "pointer" }} onClick={handleCartClick}>
@@ -91,7 +90,9 @@ function PurchasePage() {
               <p className="emi">EMI Options available</p>
 
               {/* Buy Now Button */}
-              <Button variant="outlined">Buy now</Button>
+              <button className="bg-blue-600 px-4 py-1 rounded text-white hover:bg-white" onClick={handleBuyNowClick}>
+                Buy Now
+              </button>
             </div>
           </div>
         </div>
