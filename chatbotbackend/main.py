@@ -84,6 +84,25 @@ def get_user_scheduled_purchases(user_id: str):
         print(f"Error getting scheduled purchases: {str(e)}")
         return []
 
+# Add this function after your existing Firebase functions
+def create_purchase(user_id: str, laptop_id: str, purchase_details: dict):
+    """Create a new order record in Firebase"""
+    try:
+        orders_ref = db.collection("orders")  # Changed from purchases to orders
+        orders_ref.add({
+            "userId": user_id,  # Changed from user_id
+            "laptop_id": laptop_id,
+            "productName": purchase_details.get('title'),  # Changed from product_name
+            "price": purchase_details.get('price'),
+            "timestamp": firestore.SERVER_TIMESTAMP,  # Changed from purchase_date
+            "status": "pending",
+            "payment_status": "pending"
+        })
+        return True
+    except Exception as e:
+        print(f"Error creating order: {str(e)}")
+        return False
+
 # Load environment variables
 load_dotenv()
 
@@ -213,7 +232,7 @@ class SupportResponse(BaseModel):
     context: str
     status: str = "success"
     info: str
-    ui_actions: List[Dict[str, str]] = []
+    ui_actions: List[Dict[str, Any]] = []  # Change str to Any to allow different types
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -337,21 +356,59 @@ async def handle_support_request(request: SupportRequest):
             ui_actions=ui_actions
         )
 
+    # Update the 'buy' info handler in handle_support_request
     elif request.info == 'buy':
-        # Handle buy now action
-        laptop_details = read_data(request.query)
-        if laptop_details:
-            laptop_name = laptop_details.get('title', request.query)
-            response_text = f"Thank you for your purchase! You have successfully bought the {laptop_name}."
-        else:
-            response_text = "Error: Could not find laptop details"
-        
-        return SupportResponse(
-            response=response_text,
-            context=request.context,
-            info=request.info,
-            ui_actions=ui_actions
-        )
+        try:
+            if not request.user_id:
+                return SupportResponse(
+                    response="Please login to make a purchase",
+                    context=request.context,
+                    info=request.info,
+                    ui_actions=[]
+                )
+
+            laptop_details = read_data(request.query)
+            if laptop_details:
+                laptop_name = laptop_details.get('title', request.query)
+                
+                # Create purchase record in Firebase
+                success = create_purchase(request.user_id, request.query, laptop_details)
+                
+                if success:
+                    response_text = f"Great! Your purchase of {laptop_name} has been confirmed. Check your orders for details."
+                    ui_actions = [{
+                        "type": "purchase_complete",
+                        "product_id": request.query,
+                        "success": "true"  # Changed from True to "true"
+                    }]
+                else:
+                    response_text = "Sorry, there was an error processing your purchase. Please try again."
+                    ui_actions = [{
+                        "type": "purchase_complete",
+                        "success": "false"  # Changed from False to "false"
+                    }]
+                
+                return SupportResponse(
+                    response=response_text,
+                    context=request.context,
+                    info=request.info,
+                    ui_actions=ui_actions
+                )
+            else:
+                return SupportResponse(
+                    response="Error: Could not find laptop details",
+                    context=request.context,
+                    info=request.info,
+                    ui_actions=[]
+                )
+        except Exception as e:
+            print(f"Error in buy handler: {str(e)}")
+            return SupportResponse(
+                response="An error occurred while processing your purchase. Please try again.",
+                context=request.context,
+                info=request.info,
+                ui_actions=[]
+            )
 
     elif request.info == 'schedule':
         laptop_details = read_data(request.query)
