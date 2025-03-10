@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader } from 'lucide-react';
 import './chatbot.css';
+import { getAuth } from 'firebase/auth';
+
 
 const ChatbotSection = ({ onBrandSelect }) => {  // Add this prop
   const [message, setMessage] = useState('');
@@ -12,6 +14,7 @@ const ChatbotSection = ({ onBrandSelect }) => {  // Add this prop
   const [showWelcome, setShowWelcome] = useState(true);
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
+  const auth = getAuth(); // Add this
 
   useEffect(() => {
     const handleButtonClick = (event) => {
@@ -37,6 +40,12 @@ const ChatbotSection = ({ onBrandSelect }) => {  // Add this prop
   const handleUIAction = (action) => {
     if (action.type === 'triggerBrandView' && onBrandSelect) {
       onBrandSelect(action.brand);
+    } else if (action.type === 'purchase_complete') {
+      if (action.success === "true") {  // Compare with string "true"
+        alert('Purchase successful! Check your orders for details.');
+      } else {
+        alert('Failed to complete purchase. Please try again.');
+      }
     }
   };
 
@@ -103,7 +112,8 @@ const ChatbotSection = ({ onBrandSelect }) => {  // Add this prop
         body: JSON.stringify({
           query: userMessage,
           context: context,
-          info: info
+          info: info,
+          user_id: auth.currentUser?.uid || '' // Add user ID to request
         }),
       });
       
