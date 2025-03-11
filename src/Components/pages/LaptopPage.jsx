@@ -96,7 +96,7 @@ const LaptopPage = ({ brand, searchQuery }) => { // Accept searchQuery as prop
             <p className="emi-text">EMI Options available</p>
             <div className="action-buttons">
               <button
-                className="buy-now-button"
+                className="view-button"
                 onClick={() => {
                   navigate('/order', { 
                     state: { 
@@ -147,14 +147,14 @@ const LaptopPage = ({ brand, searchQuery }) => { // Accept searchQuery as prop
                 <p className="laptop-description">{product.description}</p>
                 <div className="button-group">
                   <button 
-                    className="add-cart-button"
+                    className="view-button"
                     onClick={() => handleAddToCart(product)}
                     disabled={addingToCart === product.id}
                   >
                     {addingToCart === product.id ? '...' : 'Add to Cart'}
                   </button>
                   <button 
-                    className="buy-button"
+                    className="view-button"
                     onClick={() => handleBuyNow(product)}
                   >
                     Buy Now

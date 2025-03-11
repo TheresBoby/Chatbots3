@@ -6,6 +6,9 @@ import LaptopSection from './LaptopSection';
 import LaptopPage from './LaptopPage';
 import UserManagement from './UserManagement';
 import './chatbot.css';
+import IconButton from '@mui/material/IconButton';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import AlarmIcon from '@mui/icons-material/Alarm';
 
 const FirstPage = () => {
   const navigate = useNavigate();
@@ -25,6 +28,11 @@ const FirstPage = () => {
   const handleUserClick = () => {
     setShowUserManagement(true);
     setSelectedBrand(null);
+  };
+  const handleNotification = () => {
+    setShowUserManagement(false);
+    setSelectedBrand(null);
+    navigate('/notifications');
   };
 
   const handleCart = () => {
@@ -71,9 +79,12 @@ const FirstPage = () => {
             <Search className="search-icon" size={16} />
           </div>
           <div className="header-actions">
-            <button onClick={handleCart} className="icon-button">
-              <ShoppingCart size={20} />
-            </button>
+          <IconButton onClick={handleNotification} color="secondary" aria-label="add an alarm">
+        <AlarmIcon />
+      </IconButton>
+            <IconButton onClick={handleCart} color="primary" aria-label="add to shopping cart">
+        <AddShoppingCartIcon />
+      </IconButton>
             <button onClick={handleUserClick} className="icon-button">
               <User size={20} />
             </button>

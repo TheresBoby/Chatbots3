@@ -16,6 +16,7 @@ import AdminHome from "./Components/pages/AdminHome";
 import Order from "./Components/pages/order"; // ✅ Import Order.jsx
 import ViewOrders from "./Components/pages/ViewOrders";
 import LaptopPage from "./Components/pages/LaptopPage";
+import Notification from "./Components/pages/notification";
 
 function App() {
   const user = {
@@ -56,6 +57,7 @@ function App() {
                 />
                 <Route path="/admindashboard" element={<AdminDashboard />} />
                 <Route path="/adminhome" element={<AdminHome />} />
+                <Route path="/notifications" element={<Notification />} />
               </Routes>
             </Suspense>
           </div>

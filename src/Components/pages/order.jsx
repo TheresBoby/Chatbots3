@@ -4,6 +4,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, collection, addDoc } from "firebase/firestore";
 import ChatbotSection from './ChatbotSection'; // Import the ChatbotSection component
 import './Order.css'; // Import the CSS file
+import Button from '@mui/material/Button';
 
 const Order = () => {
   const location = useLocation();
@@ -82,12 +83,8 @@ const Order = () => {
             <p className="text-gray-400 mt-4">Placing your order...</p>
           )}
 
-          <button
-            className="mt-6 px-4 py-2 bg-blue-600 rounded hover:bg-blue-400"
-            onClick={() => navigate("/firstpage")}
-          >
-            Go Back to Home
-          </button>
+          
+          <Button onClick={() => navigate("/firstpage")} variant="outlined">Go Home</Button>
         </div>
       </div>
     </div>

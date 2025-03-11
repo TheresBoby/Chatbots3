@@ -1,27 +1,84 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Loader } from 'lucide-react';
 import './chatbot.css';
-import { getAuth } from 'firebase/auth';
-
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { createOrder, scheduleOrder } from "./createOrder";
 
 const ChatbotSection = ({ onBrandSelect }) => {  // Add this prop
   const [message, setMessage] = useState('');
   const [info, setInfo] = useState('');
   const [resInfo, setResInfo] = useState('');
+  const [lapId, setLapId] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [context, setContext] = useState('product_inquiry');
   const [isLoading, setIsLoading] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
-  const auth = getAuth(); // Add this
-
+  const [user, setUser] = useState(null);
+  const auth = getAuth();
+  const [uid, setUid] = useState('');
+  
   useEffect(() => {
-    const handleButtonClick = (event) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      console.log(currentUser);
+      if (currentUser) {
+        setUser(currentUser);
+        setUid(currentUser.uid);
+        console.log(uid);
+      } else {
+        setError("User not logged in!");
+      }
+    });
+    
+
+  return () => unsubscribe();
+
+}, []); // Run only once when component mounts
+
+
+
+useEffect(() => {
+    const handleButtonClick = async (event) => {
+      console.log({user});
+      console.log(uid);
       if (event.target.tagName === 'BUTTON' && event.target.dataset.message) {
         const buttonMessage = event.target.dataset.message;
         setMessage(buttonMessage);
         setInfo(event.target.dataset.type);
+        console.log(user['uid']);
+        if (event.target.dataset.type === "buy") {
+          const productId = buttonMessage; // Assuming button has data-product-id
+
+          if (!productId) {
+            console.error("Product ID is missing");
+            return;
+          }
+
+          try {
+            const orderId = await createOrder(user.uid, [productId]);
+            console.log("Order created:", orderId);
+          } catch (error) {
+            console.error("Failed to create order:", error);
+          }
+        }
+        console.log({info});
+        if (info === "schedule_amount") {
+          const productId = buttonMessage; // Assuming button has data-product-id
+          console.log(buttonMessage);
+          if (!productId) {
+            console.error("Product ID is missing");
+            return;
+          }
+
+          try {
+            console.log(message);
+            const orderId = await scheduleOrder(user.uid, productId, message);
+            console.log("Order created:", orderId);
+          } catch (error) {
+            console.error("Failed to create order:", error);
+          }
+        }
         document.getElementById('submit-button').click();
       }
     };
@@ -40,12 +97,6 @@ const ChatbotSection = ({ onBrandSelect }) => {  // Add this prop
   const handleUIAction = (action) => {
     if (action.type === 'triggerBrandView' && onBrandSelect) {
       onBrandSelect(action.brand);
-    } else if (action.type === 'purchase_complete') {
-      if (action.success === "true") {  // Compare with string "true"
-        alert('Purchase successful! Check your orders for details.');
-      } else {
-        alert('Failed to complete purchase. Please try again.');
-      }
     }
   };
 
@@ -103,6 +154,31 @@ const ChatbotSection = ({ onBrandSelect }) => {  // Add this prop
 
   const sendMessageToBackend = async (userMessage, context) => {
     try {
+      if(info == 'schedule') {
+        setLapId(userMessage);
+      }
+      if(info == '') {
+        setLapId(userMessage);
+      }
+      if(info == 'schedule_amount') {
+          const productId = lapId; // Assuming button has data-product-id
+          console.log(lapId);
+          if (!productId) {
+            console.error("Product ID is missing");
+            return;
+          }
+
+          try {
+            console.log(message);
+            const orderId = await scheduleOrder(uid, productId, userMessage);
+            console.log("Order created:", orderId);
+          } catch (error) {
+            console.error("Failed to create order:", error);
+          }
+      }
+      console.log('---------------------');
+      console.log(lapId);
+      console.log('---------------------');
       setIsLoading(true);
       const response = await fetch('http://127.0.0.1:8000/support', {
         method: 'POST',
@@ -113,7 +189,8 @@ const ChatbotSection = ({ onBrandSelect }) => {  // Add this prop
           query: userMessage,
           context: context,
           info: info,
-          user_id: auth.currentUser?.uid || '' // Add user ID to request
+          user_id: user.uid,
+          lap_id: lapId
         }),
       });
       
@@ -123,7 +200,7 @@ const ChatbotSection = ({ onBrandSelect }) => {  // Add this prop
       
       const data = await response.json();
       setResInfo(data.info ? data.info : '');
-      setInfo('');
+      setInfo(data.info == 'schedule' ? 'schedule_amount' : '');
 
       // Handle UI actions
       if (data.ui_actions && data.ui_actions.length > 0) {
