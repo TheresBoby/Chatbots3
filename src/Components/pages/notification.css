@@ -140,6 +140,60 @@
   color: white;
 }
 
+.edit-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 0.5rem;
+  padding: 0.25rem;
+}
+
+.edit-amount-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.amount-input {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  border: 1px solid #404040;
+  background-color: #2d2d2d;
+  color: white;
+}
+
+.save-button,
+.cancel-button,
+.delete-button {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.save-button {
+  background-color: #4ade80;
+  color: white;
+}
+
+.cancel-button {
+  background-color: #6b7280;
+  color: white;
+}
+
+.delete-button {
+  background-color: #dc2626;
+  color: white;
+  margin-top: 0.5rem;
+}
+
+.save-button:hover,
+.cancel-button:hover,
+.delete-button:hover {
+  opacity: 0.9;
+}
+
 @media (max-width: 768px) {
   .notification-container {
     padding: 1rem;

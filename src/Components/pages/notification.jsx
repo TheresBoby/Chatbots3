@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase/firebase';
 import { getAuth } from 'firebase/auth';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import './notification.css';
 
 const Notification = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [newAmount, setNewAmount] = useState('');
   const auth = getAuth();
 
   useEffect(() => {
@@ -48,6 +51,33 @@ const Notification = () => {
     return new Date(timestamp.toDate()).toLocaleString();
   };
 
+  const handleDelete = async (orderId) => {
+    if (window.confirm('Are you sure you want to cancel this order?')) {
+      try {
+        await deleteDoc(doc(db, 'orders', orderId));
+      } catch (error) {
+        console.error('Error deleting order:', error);
+        alert('Failed to cancel order');
+      }
+    }
+  };
+
+  const handleEditAmount = async (orderId) => {
+    if (!newAmount) return;
+    
+    try {
+      await updateDoc(doc(db, 'orders', orderId), {
+        amount: newAmount,
+        status: 'scheduled' // Reset status when amount is changed
+      });
+      setEditingOrder(null);
+      setNewAmount('');
+    } catch (error) {
+      console.error('Error updating amount:', error);
+      alert('Failed to update amount');
+    }
+  };
+
   const renderStatusWithAmount = (order) => {
     if (order.status === 'scheduled') {
       const orderPrice = parseFloat(order.price.replace(/[^\d.]/g, ''));
@@ -62,13 +92,53 @@ const Notification = () => {
           <div className="scheduled-info">
             <div className="scheduled-amount">
               Scheduled purchase for: ₹{maxAmount.toLocaleString()}
+              {status === 'scheduled' && (
+                <button 
+                  className="edit-button"
+                  onClick={() => setEditingOrder(order.id)}
+                >
+                  ✏️
+                </button>
+              )}
             </div>
+            {editingOrder === order.id && (
+              <div className="edit-amount-form">
+                <input
+                  type="number"
+                  value={newAmount}
+                  onChange={(e) => setNewAmount(e.target.value)}
+                  placeholder="Enter new amount"
+                  className="amount-input"
+                />
+                <button 
+                  onClick={() => handleEditAmount(order.id)}
+                  className="save-button"
+                >
+                  Save
+                </button>
+                <button 
+                  onClick={() => {
+                    setEditingOrder(null);
+                    setNewAmount('');
+                  }}
+                  className="cancel-button"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
             {status === 'confirmed' && (
               <div className="confirmation-message">
                 Price (₹{orderPrice.toLocaleString()}) is within your budget!
               </div>
             )}
           </div>
+          <button 
+            className="delete-button"
+            onClick={() => handleDelete(order.id)}
+          >
+            Cancel Order
+          </button>
         </div>
       );
     }

@@ -30,23 +30,15 @@ const ChatbotSection = ({ onBrandSelect }) => {  // Add this prop
         setError("User not logged in!");
       }
     });
-    
 
-  return () => unsubscribe();
-
-}, []); // Run only once when component mounts
-
-
-
-useEffect(() => {
     const handleButtonClick = async (event) => {
+      unsubscribe();
       console.log({user});
       console.log(uid);
       if (event.target.tagName === 'BUTTON' && event.target.dataset.message) {
         const buttonMessage = event.target.dataset.message;
         setMessage(buttonMessage);
         setInfo(event.target.dataset.type);
-        console.log(user['uid']);
         if (event.target.dataset.type === "buy") {
           const productId = buttonMessage; // Assuming button has data-product-id
 
@@ -56,7 +48,7 @@ useEffect(() => {
           }
 
           try {
-            const orderId = await createOrder(user.uid, [productId]);
+            const orderId = await createOrder(uid, [productId]);
             console.log("Order created:", orderId);
           } catch (error) {
             console.error("Failed to create order:", error);
@@ -72,8 +64,8 @@ useEffect(() => {
           }
 
           try {
-            console.log(message);
-            const orderId = await scheduleOrder(user.uid, productId, message);
+            console.log(uid);
+            const orderId = await scheduleOrder(uid, productId, message);
             console.log("Order created:", orderId);
           } catch (error) {
             console.error("Failed to create order:", error);
@@ -153,6 +145,8 @@ useEffect(() => {
   );
 
   const sendMessageToBackend = async (userMessage, context) => {
+    let data = {};
+    
     try {
       if(info == 'schedule') {
         setLapId(userMessage);
@@ -162,7 +156,7 @@ useEffect(() => {
       }
       if(info == 'schedule_amount') {
           const productId = lapId; // Assuming button has data-product-id
-          console.log(lapId);
+          console.log(uid);
           if (!productId) {
             console.error("Product ID is missing");
             return;
@@ -170,35 +164,31 @@ useEffect(() => {
 
           try {
             console.log(message);
-            const orderId = await scheduleOrder(uid, productId, userMessage);
-            console.log("Order created:", orderId);
+            data = await scheduleOrder(uid, productId, userMessage, context);
           } catch (error) {
             console.error("Failed to create order:", error);
           }
       }
-      console.log('---------------------');
-      console.log(lapId);
-      console.log('---------------------');
-      setIsLoading(true);
-      const response = await fetch('http://127.0.0.1:8000/support', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          query: userMessage,
-          context: context,
-          info: info,
-          user_id: user.uid,
-          lap_id: lapId
-        }),
-      });
+      else {
+        const response = await fetch('http://127.0.0.1:8000/support', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: userMessage,
+            context: context,
+            info: info,
+            user_id: uid,
+            lap_id: lapId
+          }),
+        });
       
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        data = await response.json();
       }
-      
-      const data = await response.json();
       setResInfo(data.info ? data.info : '');
       setInfo(data.info == 'schedule' ? 'schedule_amount' : '');
 

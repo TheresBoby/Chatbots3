@@ -86,11 +86,17 @@ const AdminDashboard = () => {
       };
 
       if (editingProduct) {
-        await updateDoc(doc(db, "laptops", editingProduct.id), productWithImage);
+        // Update existing product
+        const productRef = doc(db, "laptops", editingProduct.id);
+        await updateDoc(productRef, productWithImage);
+        console.log("Product updated successfully");
       } else {
+        // Add new product
         await addDoc(collection(db, "laptops"), productWithImage);
+        console.log("Product added successfully");
       }
 
+      // Reset form and refresh products
       setProductData({
         title: '',
         description: '',
@@ -103,10 +109,10 @@ const AdminDashboard = () => {
       });
       setImageFile(null);
       setEditingProduct(null);
-      fetchProducts();
+      await fetchProducts(); // Refresh the products list
     } catch (error) {
       console.error("Error submitting product:", error);
-      alert("Error saving product");
+      alert("Error saving product: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -114,7 +120,16 @@ const AdminDashboard = () => {
 
   const handleEdit = (product) => {
     setEditingProduct(product);
-    setProductData(product);
+    setProductData({
+      title: product.title || '',
+      description: product.description || '',
+      price: product.price || '',
+      discountPrice: product.discountPrice || '',
+      discount: product.discount || '',
+      rating: product.rating || '',
+      image: product.image || '',
+      brand: product.brand || 'HP'
+    });
   };
 
   const handleDelete = async (productId) => {
@@ -246,11 +261,30 @@ const AdminDashboard = () => {
               {products.map(product => (
                 <div key={product.id} className="product-card">
                   <img src={product.image} alt={product.title} />
-                  <h3>{product.title}</h3>
-                  <p>Price: {product.price}</p>
-                  <div className="product-actions">
-                    <button onClick={() => handleEdit(product)}>Edit</button>
-                    <button onClick={() => handleDelete(product.id)}>Delete</button>
+                  <div className="product-info">
+                    <h3>{product.title}</h3>
+                    <p className="brand">Brand: {product.brand}</p>
+                    <p className="price">Price: {product.price}</p>
+                    {product.discountPrice && (
+                      <p className="discount-price">Discount Price: {product.discountPrice}</p>
+                    )}
+                    {product.discount && (
+                      <p className="discount">Discount: {product.discount}</p>
+                    )}
+                    <div className="product-actions">
+                      <button 
+                        className="edit-button"
+                        onClick={() => handleEdit(product)}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        className="delete-button"
+                        onClick={() => handleDelete(product.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
