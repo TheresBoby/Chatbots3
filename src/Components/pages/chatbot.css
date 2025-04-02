@@ -53,26 +53,26 @@
     flex-direction: column;
     gap: 1rem;
     scroll-behavior: smooth;
-    margin-top: 1rem;
+    max-height: calc(100vh - 140px); /* Adjust based on your header/input heights */
+    min-height: 300px;
   }
   
-  /* Scrollbar Styling */
+  /* Add smooth scrollbar styling */
   .chat-messages::-webkit-scrollbar {
     width: 6px;
   }
   
   .chat-messages::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
+    background: #1a1a1a;
   }
   
   .chat-messages::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 10px;
+    background: #333;
+    border-radius: 3px;
   }
   
   .chat-messages::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
+    background: #444;
   }
   
   /* Message Styles */

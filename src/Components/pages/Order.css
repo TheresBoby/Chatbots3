@@ -16,3 +16,19 @@
   background-color: #070707;
   overflow-y: auto; /* Enable scrolling if content overflows */
 }
+
+.order-section button {
+  transition: all 0.2s ease;
+}
+
+.order-section button:disabled {
+  cursor: not-allowed;
+}
+
+.order-section button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.order-section button:active:not(:disabled) {
+  transform: translateY(0);
+}

@@ -99,6 +99,10 @@ const UserManagement = ({ onLogout = () => {} }) => {
     navigate("/vieworders");
   };
 
+  const handleViewWallet = () => {
+    navigate("/wallet");
+  };
+
   const handleSettings = () => {
     console.log("Opening Settings");
   };
@@ -171,9 +175,13 @@ const UserManagement = ({ onLogout = () => {} }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
             <h3 className="text-zinc-200">Quick Actions</h3>
-            <button onClick={handleViewOrders} className="w-full px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-md flex items-center gap-2">
+            <button onClick={handleViewOrders} className="w-full px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-md flex items-center gap-2 mb-2">
               <Package className="h-4 w-4" />
               View Orders
+            </button>
+            <button onClick={handleViewWallet} className="w-full px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-md flex items-center gap-2">
+              <Wallet className="h-4 w-4" />
+              View Wallet
             </button>
           </div>
 

@@ -86,6 +86,12 @@ const ChatbotSection = ({ onBrandSelect }) => {  // Add this prop
     };
   }, []);
 
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatHistory]);
+
   const handleUIAction = (action) => {
     if (action.type === 'triggerBrandView' && onBrandSelect) {
       onBrandSelect(action.brand);
