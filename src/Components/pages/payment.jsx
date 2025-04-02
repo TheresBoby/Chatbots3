@@ -1,10 +1,14 @@
 import React, { useState } from "react";
-import { useLocation } from "react-router-dom";
-import "./Payment.css"; // Include styles
+import { useLocation, useNavigate } from "react-router-dom";
+import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { db } from "../../firebase/firebase";
+import "./Payment.css";
 
 const Payment = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [amount, setAmount] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // ✅ Function to Load Razorpay Script
   const loadRazorpayScript = () => {
@@ -24,21 +28,39 @@ const Payment = () => {
       return;
     }
 
+    setIsProcessing(true);
     const res = await loadRazorpayScript();
     if (!res) {
       alert("Razorpay SDK failed to load. Check your internet connection.");
+      setIsProcessing(false);
       return;
     }
 
     const options = {
-      key: "rzp_test_lg6GowxZGe2D3a", // Replace with your Razorpay Key
-      amount: parseFloat(amount) * 100, // Convert to paise
+      key: "rzp_test_lg6GowxZGe2D3a",
+      amount: parseFloat(amount) * 100,
       currency: "INR",
       name: "STARTUP_PROJECTS",
       description: "Wallet Recharge",
-      handler: function (response) {
-        console.log("Payment Successful! ID:", response.razorpay_payment_id);
-        alert("Payment successful! ID: " + response.razorpay_payment_id);
+      handler: async function (response) {
+        try {
+          // Update wallet balance in Firestore
+          const userRef = doc(db, "users", location.state.userId);
+          const userSnap = await getDoc(userRef);
+          if (userSnap.exists()) {
+            const currentBalance = userSnap.data().wallet || 0;
+            await updateDoc(userRef, {
+              wallet: currentBalance + parseFloat(amount)
+            });
+          }
+          
+          // Show success message and redirect
+          alert("Payment successful! Your wallet has been updated.");
+          navigate("/profile"); // Redirect to user management
+        } catch (error) {
+          console.error("Error updating wallet:", error);
+          alert("Payment successful but wallet update failed. Please contact support.");
+        }
       },
       prefill: {
         name: "Aadithyaa",
@@ -46,12 +68,13 @@ const Payment = () => {
         contact: "8606783591",
       },
       theme: {
-        color: "#3399cc",
+        color: "#4f46e5",
       },
     };
 
     const rzp = new window.Razorpay(options);
     rzp.open();
+    setIsProcessing(false);
   };
 
   // ✅ Numeric Keypad Functions
@@ -65,19 +88,35 @@ const Payment = () => {
 
   return (
     <div className="payment-container">
-      <h2>Enter Amount to Add</h2>
+      <div className="payment-header">
+        <button 
+          onClick={() => navigate("/profile")} 
+          className="back-button"
+        >
+          ← Back to Profile
+        </button>
+        <h2>Add Money to Wallet</h2>
+      </div>
+
       <div className="amount-display">₹{amount || "0"}</div>
 
-      {/* Numeric Keypad */}
       <div className="keypad">
         {[1, 2, 3, 4, 5, 6, 7, 8, 9, ".", 0].map((num) => (
-          <button key={num} onClick={() => handleKeyPress(num.toString())}>
+          <button 
+            key={num} 
+            onClick={() => handleKeyPress(num.toString())}
+            disabled={isProcessing}
+          >
             {num}
           </button>
         ))}
-        <button onClick={handleBackspace}>⌫</button>
-        <button className="confirm-btn" onClick={handlePayment}>
-          ✔
+        <button onClick={handleBackspace} disabled={isProcessing}>⌫</button>
+        <button 
+          className="confirm-btn" 
+          onClick={handlePayment}
+          disabled={isProcessing || !amount}
+        >
+          {isProcessing ? "Processing..." : "✔"}
         </button>
       </div>
     </div>

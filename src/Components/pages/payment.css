@@ -1,37 +1,80 @@
+.payment-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.back-button {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.back-button:hover {
+  background: #3730a3;
+}
+
 .payment-container {
-    text-align: center;
-    padding: 20px;
-  }
-  
-  .amount-display {
-    font-size: 2rem;
-    margin: 20px 0;
-    font-weight: bold;
-  }
-  
-  .keypad {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    max-width: 200px;
-    margin: auto;
-  }
-  
-  .keypad button {
-    font-size: 1.5rem;
-    padding: 15px;
-    border: none;
-    background: #f0f0f0;
-    cursor: pointer;
-    border-radius: 10px;
-  }
-  
-  .keypad button:active {
-    background: #ccc;
-  }
-  
-  .confirm-btn {
-    background: #4caf50;
-    color: white;
-  }
-  
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #0a1930;
+  color: white;
+  padding: 2rem;
+}
+
+.amount-display {
+  font-size: 2rem;
+  margin: 20px 0;
+  font-weight: bold;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  max-width: 200px;
+  margin: auto;
+}
+
+.keypad button {
+  font-size: 1.5rem;
+  padding: 15px;
+  border: none;
+  background: #f0f0f0;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.keypad button:active {
+  background: #ccc;
+}
+
+.keypad button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.confirm-btn {
+  background: #4f46e5;
+  color: white;
+}
+
+.confirm-btn:disabled {
+  background: #2d3748;
+}

@@ -84,6 +84,25 @@ def get_user_scheduled_purchases(user_id: str):
         print(f"Error getting scheduled purchases: {str(e)}")
         return []
 
+# Add this function after your existing Firebase functions
+def create_purchase(user_id: str, laptop_id: str, purchase_details: dict):
+    """Create a new order record in Firebase"""
+    try:
+        orders_ref = db.collection("orders")  # Changed from purchases to orders
+        orders_ref.add({
+            "userId": user_id,  # Changed from user_id
+            "laptop_id": laptop_id,
+            "productName": purchase_details.get('title'),  # Changed from product_name
+            "price": purchase_details.get('price'),
+            "timestamp": firestore.SERVER_TIMESTAMP,  # Changed from purchase_date
+            "status": "pending",
+            "payment_status": "pending"
+        })
+        return True
+    except Exception as e:
+        print(f"Error creating order: {str(e)}")
+        return False
+
 # Load environment variables
 load_dotenv()
 
@@ -153,17 +172,102 @@ async def check_price_updates():
 
 # Your existing SUPPORT_CONTEXTS dictionary remains the same
 SUPPORT_CONTEXTS = {
-    "billing": """You are a helpful customer support agent for a laptop selling website. 
-    Assist the customer with billing-related inquiries, such as payment methods, 
-    invoice details, and refund processes.""",
+    "billing": """You are a helpful customer support agent for a laptop selling website.
+
+    Common Questions and Navigation Help:
+    Q: How do I check or add money to my wallet?
+    A: Here's how to access and manage your wallet:
+    1. Click on the 'User Profile' icon in the top-right corner
+    2. Select 'View Wallet' from the dropdown menu
+    3. Your current wallet balance will be displayed
+    4. To add money:
+       - Click on 'Add Money' button
+       - Enter the amount you want to add
+       - Select your preferred payment method
+       - Complete the transaction
     
-    "technical": """You are a technical support agent for a laptop selling website. 
-    Provide detailed, step-by-step troubleshooting guidance for laptop issues, 
-    including hardware and software problems.""",
+    Q: What can I do with my wallet balance?
+    A: Your wallet balance can be used to:
+    - Make instant payments for laptop purchases
+    - Save payment details securely
+    - Track your transaction history
+    - Get faster checkout experience
+
+    Q: Where can I view my wallet transaction history?
+    A: To view your wallet transactions:
+    1. Go to 'User Profile'
+    2. Click 'View Wallet'
+    3. Scroll down to see your complete transaction history
+    4. You can filter transactions by date or type
+
+    Base your responses on these guidelines and always direct users to the wallet section through the User Profile menu.""",
     
-    "product_inquiry": """You are a product expert for a laptop selling website. 
-    Help customers understand laptop specifications, compare models, 
-    and provide recommendations based on their needs."""
+    "technical": """You are a technical support agent for a laptop selling website.
+    
+    Common Technical Questions:
+    Q: How do I compare different laptop models?
+    A: To compare laptops:
+    1. Select the laptops you want to compare
+    2. Click the 'Compare' button on each product
+    3. Go to 'Comparison View' in the top navigation
+    4. View detailed specifications side by side
+
+    Q: Where can I find laptop specifications?
+    A: To view specifications:
+    1. Click on any laptop
+    2. Select 'View Configuration' button
+    3. Scroll through detailed specifications
+    4. Click on any spec for more information
+
+    Q: How do I filter laptops by my requirements?
+    A: Use our filter options:
+    1. Select brand preferences
+    2. Choose your price range
+    3. Filter by specifications (RAM, Processor, etc.)
+    4. Sort by price or ratings
+
+    Base your responses on these guidelines and always provide clear navigation steps.""",
+    
+    "product_inquiry": """You are a product expert for a laptop selling website.
+    
+    Common Product Questions:
+    Q: Where can I find gaming laptops?
+    A: Here are our best gaming laptops from ASUS:
+
+    1. ASUS ROG Strix G15 (2023)
+    - AMD Ryzen 9 processor
+    - NVIDIA RTX 4060 8GB Graphics
+    - 16GB RAM, 1TB SSD
+    - 165Hz Display
+    Price: ₹124,990
+    <button id="view" data-message="ASUS_G15" data-type="view" type="button" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 mr-2">View Details</button>
+    <button id="buy" data-message="ASUS_G15" data-type="buy" type="button" class="bg-green-500 text-white p-2 rounded hover:bg-green-600">Buy Now</button>
+
+    2. ASUS TUF Gaming A15
+    - AMD Ryzen 7 processor
+    - RTX 3050 6GB Graphics
+    - 16GB RAM, 512GB SSD
+    - 144Hz Display
+    Price: ₹82,990
+    <button id="view" data-message="ASUS_TUF_A15" data-type="view" type="button" class="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 mr-2">View Details</button>
+    <button id="buy" data-message="ASUS_TUF_A15" data-type="buy" type="button" class="bg-green-500 text-white p-2 rounded hover:bg-green-600">Buy Now</button>
+
+    Q: How do I schedule a purchase for when price drops?
+    A: To schedule a purchase:
+    1. Find the laptop you're interested in
+    2. Click 'Schedule Purchase' button
+    3. Enter your maximum budget
+    4. Confirm the scheduling
+    We'll notify you when the price drops below your budget!
+
+    Q: What laptops are good for students?
+    A: For students, we recommend:
+    1. ASUS VivoBook 15
+    2. HP Pavilion
+    3. Dell Inspiron
+    Key features: Good battery life, lightweight, affordable price range
+
+    Base your responses on these guidelines and recommend specific models when available."""
 }
 
 class LaptopSupportChatbot:
@@ -207,14 +311,13 @@ class SupportRequest(BaseModel):
     query: str = Field(..., description="Customer's support query")
     info: str = Field(default="", description="Type defines here")
     user_id: str = Field(default="", description="User ID from Firebase Auth")
-    lap_id: str = Field(default="", description="Laptop ID from Firebase Auth")
 
 class SupportResponse(BaseModel):
     response: str
     context: str
     status: str = "success"
     info: str
-    ui_actions: List[Dict[str, str]] = []
+    ui_actions: List[Dict[str, Any]] = []  # Change str to Any to allow different types
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -338,21 +441,59 @@ async def handle_support_request(request: SupportRequest):
             ui_actions=ui_actions
         )
 
+    # Update the 'buy' info handler in handle_support_request
     elif request.info == 'buy':
-        # Handle buy now action
-        laptop_details = read_data(request.query)
-        if laptop_details:
-            laptop_name = laptop_details.get('title', request.query)
-            response_text = f"Thank you for your purchase! You have successfully bought the {laptop_name}."
-        else:
-            response_text = "Error: Could not find laptop details"
-        
-        return SupportResponse(
-            response=response_text,
-            context=request.context,
-            info=request.info,
-            ui_actions=ui_actions
-        )
+        try:
+            if not request.user_id:
+                return SupportResponse(
+                    response="Please login to make a purchase",
+                    context=request.context,
+                    info=request.info,
+                    ui_actions=[]
+                )
+
+            laptop_details = read_data(request.query)
+            if laptop_details:
+                laptop_name = laptop_details.get('title', request.query)
+                
+                # Create purchase record in Firebase
+                success = create_purchase(request.user_id, request.query, laptop_details)
+                
+                if success:
+                    response_text = f"Great! Your purchase of {laptop_name} has been confirmed. Check your orders for details."
+                    ui_actions = [{
+                        "type": "purchase_complete",
+                        "product_id": request.query,
+                        "success": "true"  # Changed from True to "true"
+                    }]
+                else:
+                    response_text = "Sorry, there was an error processing your purchase. Please try again."
+                    ui_actions = [{
+                        "type": "purchase_complete",
+                        "success": "false"  # Changed from False to "false"
+                    }]
+                
+                return SupportResponse(
+                    response=response_text,
+                    context=request.context,
+                    info=request.info,
+                    ui_actions=ui_actions
+                )
+            else:
+                return SupportResponse(
+                    response="Error: Could not find laptop details",
+                    context=request.context,
+                    info=request.info,
+                    ui_actions=[]
+                )
+        except Exception as e:
+            print(f"Error in buy handler: {str(e)}")
+            return SupportResponse(
+                response="An error occurred while processing your purchase. Please try again.",
+                context=request.context,
+                info=request.info,
+                ui_actions=[]
+            )
 
     elif request.info == 'schedule':
         laptop_details = read_data(request.query)
@@ -378,22 +519,21 @@ async def handle_support_request(request: SupportRequest):
             )
 
     elif request.info == 'schedule_amount':
-        # try:
-        #     # First, ensure we have a user ID
-        #     if not request.user_id:
-        #         return SupportResponse(
-        #             response="Please login to schedule a purchase",
-        #             context=request.context,
-        #             info='schedule',
-        #             ui_actions=[]
-        #         )
+        try:
+            # First, ensure we have a user ID
+            if not request.user_id:
+                return SupportResponse(
+                    response="Please login to schedule a purchase",
+                    context=request.context,
+                    info='schedule',
+                    ui_actions=[]
+                )
 
-        #     # Parse amount and get laptop ID from context
-        #     max_amount = float(request.query.replace('₹', '').replace(',', ''))
-            print(request)
-            laptop_id = request.lap_id  # This should be the laptop ID from the previous schedule request
-            print(request)
-        #     # Get laptop details
+            # Parse amount and get laptop ID from context
+            max_amount = float(request.query.replace('₹', '').replace(',', ''))
+            laptop_id = request.context  # This should be the laptop ID from the previous schedule request
+
+            # Get laptop details
             laptop_details = read_data(laptop_id)
             if not laptop_details:
                 return SupportResponse(
@@ -403,76 +543,73 @@ async def handle_support_request(request: SupportRequest):
                     ui_actions=[]
                 )
 
-        #     # Get current price - remove ₹ and commas, then convert to float
+            # Get current price - remove ₹ and commas, then convert to float
             price_str = laptop_details.get('price', '0')
             current_price = float(price_str.replace('₹', '').replace(',', ''))
             laptop_name = laptop_details.get('title', laptop_id)
 
-        #     try:
-        #         # Create scheduled purchase in Firebase
-        #         scheduled_ref = db.collection("scheduled_purchases")
-        #         doc_ref = scheduled_ref.add({
-        #             "user_id": request.user_id,
-        #             "laptop_id": laptop_id,
-        #             "laptop_name": laptop_name,
-        #             "max_amount": max_amount,
-        #             "current_price": current_price,
-        #             "notify": current_price > max_amount,
-        #             "created_at": firestore.SERVER_TIMESTAMP,
-        #             "status": "pending" if current_price > max_amount else "ready"
-        #         })
+            try:
+                # Create scheduled purchase in Firebase
+                scheduled_ref = db.collection("scheduled_purchases")
+                doc_ref = scheduled_ref.add({
+                    "user_id": request.user_id,
+                    "laptop_id": laptop_id,
+                    "laptop_name": laptop_name,
+                    "max_amount": max_amount,
+                    "current_price": current_price,
+                    "notify": current_price > max_amount,
+                    "created_at": firestore.SERVER_TIMESTAMP,
+                    "status": "pending" if current_price > max_amount else "ready"
+                })
 
-        #         # Prepare response based on price comparison
-        #         if current_price <= max_amount:
-        #             response_text = (
-        #                 f"Great news! The {laptop_name} (₹{current_price:,.2f}) is within "
-        #                 f"your budget of ₹{max_amount:,.2f}. Your scheduled purchase has been confirmed!"
-        #             )
-        #         else:
-                    # response_text = (
-                    #     f"The {laptop_name} currently costs ₹{current_price:,.2f}, which is "
-                    #     f"above your maximum budget of ₹{max_amount:,.2f}. We'll notify you "
-                    #     f"when the price drops below your budget."
-                    # )
-            response_text = (
-                f"The {laptop_name} currently costs ₹{current_price:,.2f}, which is "
-                f"above your maximum budget of ₹{float(request.query):,.2f}. We'll notify you "
-                f"when the price drops below your budget."
-            )
+                # Prepare response based on price comparison
+                if current_price <= max_amount:
+                    response_text = (
+                        f"Great news! The {laptop_name} (₹{current_price:,.2f}) is within "
+                        f"your budget of ₹{max_amount:,.2f}. Your scheduled purchase has been confirmed!"
+                    )
+                else:
+                    response_text = (
+                        f"The {laptop_name} currently costs ₹{current_price:,.2f}, which is "
+                        f"above your maximum budget of ₹{max_amount:,.2f}. We'll notify you "
+                        f"when the price drops below your budget."
+                    )
+
+                return SupportResponse(
+                    response=response_text,
+                    context=laptop_id,  # Keep the laptop ID in context
+                    info=request.info,
+                    ui_actions=[{
+                        "type": "schedulePurchase",
+                        "status": "success",
+                        "scheduleId": doc_ref[1].id
+                    }]
+                )
+
+            except Exception as e:
+                print(f"Firebase error: {str(e)}")
+                return SupportResponse(
+                    response="Failed to save your scheduled purchase. Please try again.",
+                    context=request.context,
+                    info=request.info,
+                    ui_actions=[]
+                )
+
+        except ValueError:
             return SupportResponse(
-                response=response_text,
-                context=laptop_id,  # Keep the laptop ID in context
-                info=request.info,
-                ui_actions=[{
-                    "type": "schedulePurchase",
-                    "status": "success"
-                }]
+                response="Please enter a valid number (e.g., 50000)",
+                context=request.context,
+                info='schedule',
+                ui_actions=[]
             )
-
-        #     except Exception as e:
-        #         print(f"Firebase error: {str(e)}")
-        #         return SupportResponse(
-        #             response="Failed to save your scheduled purchase. Please try again.",
-        #             context=request.context,
-        #             info=request.info,
-        #             ui_actions=[]
-        #         )
-
-        # except ValueError:
-        #     return SupportResponse(
-        #         response="Please enter a valid number (e.g., 50000)",
-        #         context=request.context,
-        #         info='schedule',
-        #         ui_actions=[]
-        #     )
-        # except Exception as e:
-        #     print(f"Error in schedule_amount: {str(e)}")  # Debug log
-        #     return SupportResponse(
-        #         response="An error occurred while processing your request. Please try again.",
-        #         context=request.context,
-        #         info=request.info,
-        #         ui_actions=ui_actions
-        #     )
+        except Exception as e:
+            print(f"Error in schedule_amount: {str(e)}")  # Debug log
+            return SupportResponse(
+                response="An error occurred while processing your request. Please try again.",
+                context=request.context,
+                info=request.info,
+                ui_actions=ui_actions
+            )
 
     return SupportResponse(
         response=response_text,

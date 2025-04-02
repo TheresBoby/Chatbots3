@@ -7,13 +7,14 @@ import {
   Settings,
   User,
   Wallet,
+  ArrowLeft,
 } from "lucide-react";
 import { auth, db } from "../../firebase/firebase";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, onSnapshot, collection, query, where } from "firebase/firestore";
 
-const UserManagement = ({ onLogout = () => {} }) => {
+const UserManagement = ({ onLogout = () => {}, onClose = () => {} }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState({
     name: "Guest User",
@@ -107,6 +108,11 @@ const UserManagement = ({ onLogout = () => {} }) => {
     console.log("Opening Settings");
   };
 
+  const handleBack = () => {
+    onClose && onClose(); // Check if onClose exists before calling
+    navigate("/firstpage", { replace: true }); // Add fallback navigation
+  };
+
   return (
     <div className="min-h-screen bg-black p-6">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -187,9 +193,16 @@ const UserManagement = ({ onLogout = () => {} }) => {
 
           <div className="bg-zinc-900 p-6 rounded-lg border border-zinc-800">
             <h3 className="text-zinc-200">Account Security</h3>
-            <button onClick={handleLogout} className="w-full px-4 py-2 bg-red-900/80 hover:bg-red-900 text-red-100 rounded-md flex items-center gap-2">
+            <button onClick={handleLogout} className="w-full px-4 py-2 bg-red-900/80 hover:bg-red-900 text-red-100 rounded-md flex items-center gap-2 mb-2">
               <LogOut className="h-4 w-4" />
               Logout
+            </button>
+            <button 
+              onClick={handleBack} 
+              className="w-full px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-md flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Homepage
             </button>
           </div>
         </div>

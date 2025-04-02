@@ -29,6 +29,7 @@ const FirstPage = () => {
     setShowUserManagement(true);
     setSelectedBrand(null);
   };
+
   const handleNotification = () => {
     setShowUserManagement(false);
     setSelectedBrand(null);
@@ -46,6 +47,11 @@ const FirstPage = () => {
     setShowUserManagement(false);
   };
 
+  const handleUserManagementClose = () => {
+    setShowUserManagement(false);
+    setSelectedBrand(null); // Reset any selected brand if needed
+  };
+
   // Update search query when user types
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
@@ -54,7 +60,12 @@ const FirstPage = () => {
   // Determine which component to show on the right side
   const renderRightComponent = () => {
     if (showUserManagement) {
-      return <UserManagement onLogout={handleLogout} />;
+      return (
+        <UserManagement 
+          onLogout={handleLogout} 
+          onClose={handleUserManagementClose} 
+        />
+      );
     } else if (selectedBrand) {
       return <LaptopPage brand={selectedBrand} searchQuery={searchQuery} />; // Pass search query
     } else {
