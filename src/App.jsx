@@ -17,6 +17,8 @@ import Order from "./Components/pages/order"; // ✅ Import Order.jsx
 import ViewOrders from "./Components/pages/ViewOrders";
 import LaptopPage from "./Components/pages/LaptopPage";
 import Notification from "./Components/pages/notification";
+import WalletPage from "./Components/pages/Wallet"; // Import WalletPage
+import Payment from "./Components/pages/payment";
 
 function App() {
   const user = {
@@ -50,6 +52,9 @@ function App() {
                 <Route path="/order" element={<Order />} /> {/* ✅ Added Order Route */}
                 <Route path="/vieworders" element={<ViewOrders />} />
                 <Route path="/laptops/:brand" element={<LaptopPage />} />
+                <Route path="/wallet" element={<WalletPage />} /> {/* Added Wallet Route */}
+                <Route path="/payment" element={<Payment />} />
+                
                 {/* Admin & User Management */}
                 <Route
                   path="/user-management"

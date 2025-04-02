@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db, storage } from '../../firebase/firebase';
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import './AdminDashboard.css';
 
@@ -21,6 +21,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [users, setUsers] = useState({});
 
   useEffect(() => {
     fetchProducts();
@@ -48,13 +49,61 @@ const AdminDashboard = () => {
         ...doc.data()
       }));
       setOrders(ordersData);
+      
+      // Fetch user details for each order
+      ordersData.forEach(order => {
+        if (order.userId && !users[order.userId]) {
+          fetchUserDetails(order.userId);
+        }
+      });
     } catch (error) {
       console.error("Error fetching orders:", error);
     }
   };
 
+  // Add this function to fetch user details
+  const fetchUserDetails = async (userId) => {
+    try {
+      const userDoc = await getDoc(doc(db, "users", userId));
+      if (userDoc.exists()) {
+        setUsers(prev => ({
+          ...prev,
+          [userId]: userDoc.data().name
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  };
+
+  // Add input validation
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Validation for price fields
+    if (name === 'price' || name === 'discountPrice') {
+      // Only allow numbers and decimal points
+      const cleanValue = value.replace(/[^\d.]/g, '');
+      setProductData(prev => ({
+        ...prev,
+        [name]: cleanValue
+      }));
+      return;
+    }
+  
+    // Validation for rating
+    if (name === 'rating') {
+      const numValue = parseFloat(value);
+      if (numValue >= 0 && numValue <= 5) {
+        setProductData(prev => ({
+          ...prev,
+          [name]: value
+        }));
+      }
+      return;
+    }
+  
+    // Default handling for other fields
     setProductData(prev => ({
       ...prev,
       [name]: value
@@ -67,36 +116,74 @@ const AdminDashboard = () => {
     }
   };
 
+  // Update the generateDocId function
+  const generateDocId = (title, brand) => {
+    const brandPrefix = brand.toUpperCase();
+    const formattedTitle = title
+      .replace(/[^a-zA-Z0-9\s]/g, '') // Remove special characters except spaces
+      .replace(/\s+/g, '_')           // Replace spaces with underscores
+      .toLowerCase();                 // Convert title to lowercase
+    return `${brandPrefix}_${formattedTitle}`;
+  };
+
+  // Update the handleSubmit function
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
+  
     try {
+      // First, validate required fields
+      if (!productData.title || !productData.price || !productData.description) {
+        alert('Please fill in all required fields');
+        return;
+      }
+  
       let imageUrl = productData.image;
-
       if (imageFile) {
-        const storageRef = ref(storage, `laptops/${imageFile.name}`);
+        const storageRef = ref(storage, `laptops/${Date.now()}_${imageFile.name}`);
         await uploadBytes(storageRef, imageFile);
         imageUrl = await getDownloadURL(storageRef);
       }
-
+  
+      const formattedPrice = productData.price.startsWith('₹') 
+        ? productData.price 
+        : `₹${productData.price}`;
+      const formattedDiscountPrice = productData.discountPrice 
+        ? (productData.discountPrice.startsWith('₹') 
+          ? productData.discountPrice 
+          : `₹${productData.discountPrice}`)
+        : '';
+  
       const productWithImage = {
         ...productData,
-        image: imageUrl
+        price: formattedPrice,
+        discountPrice: formattedDiscountPrice,
+        image: imageUrl,
+        updatedAt: new Date()
       };
-
+  
       if (editingProduct) {
-        // Update existing product
-        const productRef = doc(db, "laptops", editingProduct.id);
-        await updateDoc(productRef, productWithImage);
+        const updateDocId = `${productData.brand}_${productData.title
+          .replace(/[^a-zA-Z0-9\s]/g, '')
+          .replace(/\s+/g, '_')
+          .toLowerCase()}`;
+        console.log("Updating document with ID:", updateDocId); // Debug log
+        
+        await updateDoc(doc(db, "laptops", updateDocId), productWithImage);
         console.log("Product updated successfully");
       } else {
-        // Add new product
-        await addDoc(collection(db, "laptops"), productWithImage);
+        // Create new product with generated ID
+        const docId = generateDocId(productData.title, productData.brand);
+        console.log("Creating new document with ID:", docId); // Debug log
+        
+        await setDoc(doc(db, "laptops", docId), {
+          ...productWithImage,
+          createdAt: new Date()
+        });
         console.log("Product added successfully");
       }
-
-      // Reset form and refresh products
+  
+      // Reset form
       setProductData({
         title: '',
         description: '',
@@ -109,7 +196,7 @@ const AdminDashboard = () => {
       });
       setImageFile(null);
       setEditingProduct(null);
-      await fetchProducts(); // Refresh the products list
+      await fetchProducts();
     } catch (error) {
       console.error("Error submitting product:", error);
       alert("Error saving product: " + error.message);
@@ -118,18 +205,37 @@ const AdminDashboard = () => {
     }
   };
 
+  // Update handleEdit function to extract and store the correct document ID
   const handleEdit = (product) => {
-    setEditingProduct(product);
+    console.log("Original product ID:", product.id);
+    
+    const docId = `${product.title
+      .replace(/[^a-zA-Z0-9\s]/g, '')
+      .replace(/\s+/g, '_')
+      .toLowerCase()}`;
+      
+    setEditingProduct({
+      ...product,
+      id: docId // Store the formatted document ID
+    });
+  
+    // Remove the ₹ symbol from prices when editing
+    const cleanPrice = product.price ? product.price.replace('₹', '') : '';
+    const cleanDiscountPrice = product.discountPrice ? product.discountPrice.replace('₹', '') : '';
+  
     setProductData({
       title: product.title || '',
       description: product.description || '',
-      price: product.price || '',
-      discountPrice: product.discountPrice || '',
+      price: cleanPrice,
+      discountPrice: cleanDiscountPrice,
       discount: product.discount || '',
       rating: product.rating || '',
       image: product.image || '',
       brand: product.brand || 'HP'
     });
+  
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    console.log("Generated document ID for update:", docId);
   };
 
   const handleDelete = async (productId) => {
@@ -301,6 +407,7 @@ const AdminDashboard = () => {
                   <h3>Order ID: {order.id}</h3>
                   <span className="order-status">{order.status}</span>
                 </div>
+                
                 <p>User ID: {order.userId}</p>
                 <p>Product: {order.productName}</p>
                 <p>Price: {order.price}</p>
